@@ -1,0 +1,256 @@
+{
+ "schema": "qp.source_index.v1",
+ "source_sha256": "fe02a9acc8380b53bde4b0e91a4179d01555efd9bea5c91aa89f4733cb6e820d",
+ "source_bytes": 6314,
+ "declared_type": "xlsx",
+ "detected_type": "xlsx",
+ "ok": true,
+ "error": null,
+ "truncated": false,
+ "warnings": [
+  {
+   "code": "HIDDEN_CONTENT",
+   "detail": "non-empty cell in a hidden sheet, row or column",
+   "ref": "Quote!A6"
+  },
+  {
+   "code": "HIDDEN_CONTENT",
+   "detail": "non-empty cell in a hidden sheet, row or column",
+   "ref": "Quote!D6"
+  }
+ ],
+ "workbook": {
+  "sheets": [
+   {
+    "name": "Quote",
+    "state": "visible",
+    "max_row": 7,
+    "max_col": 4
+   }
+  ],
+  "recalc_on_load": false,
+  "external_link_count": 0
+ },
+ "cells": [
+  {
+   "ref": "Quote!A1",
+   "sheet": "Quote",
+   "row": 1,
+   "col": 1,
+   "formula": null,
+   "value": "Supplier",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!B1",
+   "sheet": "Quote",
+   "row": 1,
+   "col": 2,
+   "formula": null,
+   "value": "Lakeside Equipment Inc.",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!A2",
+   "sheet": "Quote",
+   "row": 2,
+   "col": 1,
+   "formula": null,
+   "value": "Currency",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!B2",
+   "sheet": "Quote",
+   "row": 2,
+   "col": 2,
+   "formula": null,
+   "value": "USD",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!A3",
+   "sheet": "Quote",
+   "row": 3,
+   "col": 1,
+   "formula": null,
+   "value": "Item",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!B3",
+   "sheet": "Quote",
+   "row": 3,
+   "col": 2,
+   "formula": null,
+   "value": "Qty",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!C3",
+   "sheet": "Quote",
+   "row": 3,
+   "col": 3,
+   "formula": null,
+   "value": "Unit Price",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!D3",
+   "sheet": "Quote",
+   "row": 3,
+   "col": 4,
+   "formula": null,
+   "value": "Line Total",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!A4",
+   "sheet": "Quote",
+   "row": 4,
+   "col": 1,
+   "formula": null,
+   "value": "Laptop 14in",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!B4",
+   "sheet": "Quote",
+   "row": 4,
+   "col": 2,
+   "formula": null,
+   "value": "4",
+   "value_type": "n",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!C4",
+   "sheet": "Quote",
+   "row": 4,
+   "col": 3,
+   "formula": null,
+   "value": "899.5",
+   "value_type": "n",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!D4",
+   "sheet": "Quote",
+   "row": 4,
+   "col": 4,
+   "formula": "=B4*C4",
+   "value": "3598",
+   "value_type": "n",
+   "number_format": "\\$#,##0.00",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!A5",
+   "sheet": "Quote",
+   "row": 5,
+   "col": 1,
+   "formula": null,
+   "value": "Docking station",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!B5",
+   "sheet": "Quote",
+   "row": 5,
+   "col": 2,
+   "formula": null,
+   "value": "4",
+   "value_type": "n",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!C5",
+   "sheet": "Quote",
+   "row": 5,
+   "col": 3,
+   "formula": null,
+   "value": "120",
+   "value_type": "n",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!D5",
+   "sheet": "Quote",
+   "row": 5,
+   "col": 4,
+   "formula": "=B5*C5",
+   "value": "480",
+   "value_type": "n",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!A6",
+   "sheet": "Quote",
+   "row": 6,
+   "col": 1,
+   "formula": null,
+   "value": "Delivery",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": true
+  },
+  {
+   "ref": "Quote!D6",
+   "sheet": "Quote",
+   "row": 6,
+   "col": 4,
+   "formula": null,
+   "value": "75",
+   "value_type": "n",
+   "number_format": "General",
+   "hidden": true
+  },
+  {
+   "ref": "Quote!A7",
+   "sheet": "Quote",
+   "row": 7,
+   "col": 1,
+   "formula": null,
+   "value": "Subtotal",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Quote!D7",
+   "sheet": "Quote",
+   "row": 7,
+   "col": 4,
+   "formula": "=SUM(D4:D6)",
+   "value": "4153",
+   "value_type": "n",
+   "number_format": "General",
+   "hidden": false
+  }
+ ]
+}

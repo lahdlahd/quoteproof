@@ -1,0 +1,101 @@
+{
+ "schema": "qp.source_index.v1",
+ "source_sha256": "2ab9bedf8de9c59b73e8886fe1446d927814cb4787a4359689523799a4811472",
+ "source_bytes": 2013,
+ "declared_type": "pdf",
+ "detected_type": "pdf",
+ "ok": true,
+ "error": null,
+ "truncated": false,
+ "warnings": [],
+ "pdf": {
+  "pages": 2,
+  "pages_indexed": 2
+ },
+ "lines": [
+  {
+   "ref": "p1:L1",
+   "page": 1,
+   "line": 1,
+   "text": "Bello Builders Ltd - Quotation BB-0091",
+   "bbox": [
+    "72.00",
+    "32.37",
+    "278.10",
+    "44.37"
+   ]
+  },
+  {
+   "ref": "p1:L2",
+   "page": 1,
+   "line": 2,
+   "text": "Currency: NGN",
+   "bbox": [
+    "72.00",
+    "52.37",
+    "154.01",
+    "64.37"
+   ]
+  },
+  {
+   "ref": "p1:L3",
+   "page": 1,
+   "line": 3,
+   "text": "Cement 50kg bag 200 x 9,500.00 = 1,900,000.00",
+   "bbox": [
+    "72.00",
+    "72.37",
+    "339.85",
+    "84.37"
+   ]
+  },
+  {
+   "ref": "p1:L4",
+   "page": 1,
+   "line": 4,
+   "text": "Sand (tonnes) 30 x 18,000.00 = 540,000.00",
+   "bbox": [
+    "72.00",
+    "92.37",
+    "327.18",
+    "104.37"
+   ]
+  },
+  {
+   "ref": "p1:L5",
+   "page": 1,
+   "line": 5,
+   "text": "Transport 60,000.00",
+   "bbox": [
+    "72.00",
+    "112.37",
+    "276.80",
+    "124.37"
+   ]
+  },
+  {
+   "ref": "p1:L6",
+   "page": 1,
+   "line": 6,
+   "text": "Total 2,500,000.00",
+   "bbox": [
+    "72.00",
+    "132.37",
+    "272.15",
+    "144.37"
+   ]
+  },
+  {
+   "ref": "p2:L1",
+   "page": 2,
+   "line": 1,
+   "text": "Page 2: Terms - valid 30 days. Prices exclude VAT.",
+   "bbox": [
+    "72.00",
+    "32.37",
+    "346.10",
+    "44.37"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,162 @@
+{
+ "schema": "qp.source_index.v1",
+ "source_sha256": "1d95865a44b9deb12d21492fae99a3f5cd523b3fb6f5e53f14347e7d966c0e22",
+ "source_bytes": 325,
+ "declared_type": "csv",
+ "detected_type": "csv",
+ "ok": true,
+ "error": null,
+ "truncated": false,
+ "warnings": [],
+ "csv": {
+  "delimiter": ",",
+  "encoding": "utf-8",
+  "rows": 9
+ },
+ "cells": [
+  {
+   "ref": "R1C1",
+   "row": 1,
+   "col": 1,
+   "value": "Supplier"
+  },
+  {
+   "ref": "R1C2",
+   "row": 1,
+   "col": 2,
+   "value": "Adeyemi Office Supplies Ltd"
+  },
+  {
+   "ref": "R2C1",
+   "row": 2,
+   "col": 1,
+   "value": "Quote No"
+  },
+  {
+   "ref": "R2C2",
+   "row": 2,
+   "col": 2,
+   "value": "AOS-2026-114"
+  },
+  {
+   "ref": "R3C1",
+   "row": 3,
+   "col": 1,
+   "value": "Item"
+  },
+  {
+   "ref": "R3C2",
+   "row": 3,
+   "col": 2,
+   "value": "Qty"
+  },
+  {
+   "ref": "R3C3",
+   "row": 3,
+   "col": 3,
+   "value": "Unit Price (NGN)"
+  },
+  {
+   "ref": "R3C4",
+   "row": 3,
+   "col": 4,
+   "value": "Line Total (NGN)"
+  },
+  {
+   "ref": "R4C1",
+   "row": 4,
+   "col": 1,
+   "value": "Office chair (mesh)"
+  },
+  {
+   "ref": "R4C2",
+   "row": 4,
+   "col": 2,
+   "value": "10"
+  },
+  {
+   "ref": "R4C3",
+   "row": 4,
+   "col": 3,
+   "value": "₦85,000.00"
+  },
+  {
+   "ref": "R4C4",
+   "row": 4,
+   "col": 4,
+   "value": "₦850,000.00"
+  },
+  {
+   "ref": "R5C1",
+   "row": 5,
+   "col": 1,
+   "value": "Desk 1.4m"
+  },
+  {
+   "ref": "R5C2",
+   "row": 5,
+   "col": 2,
+   "value": "5"
+  },
+  {
+   "ref": "R5C3",
+   "row": 5,
+   "col": 3,
+   "value": "₦120,000.00"
+  },
+  {
+   "ref": "R5C4",
+   "row": 5,
+   "col": 4,
+   "value": "₦600,000.00"
+  },
+  {
+   "ref": "R6C1",
+   "row": 6,
+   "col": 1,
+   "value": "Delivery"
+  },
+  {
+   "ref": "R6C4",
+   "row": 6,
+   "col": 4,
+   "value": "₦25,000.00"
+  },
+  {
+   "ref": "R7C1",
+   "row": 7,
+   "col": 1,
+   "value": "VAT 7.5%"
+  },
+  {
+   "ref": "R7C4",
+   "row": 7,
+   "col": 4,
+   "value": "₦110,625.00"
+  },
+  {
+   "ref": "R8C1",
+   "row": 8,
+   "col": 1,
+   "value": "Grand Total"
+  },
+  {
+   "ref": "R8C4",
+   "row": 8,
+   "col": 4,
+   "value": "₦1,585,625.00"
+  },
+  {
+   "ref": "R9C1",
+   "row": 9,
+   "col": 1,
+   "value": "Note"
+  },
+  {
+   "ref": "R9C2",
+   "row": 9,
+   "col": 2,
+   "value": "=SUM(D4:D5) is plain text in a CSV"
+  }
+ ]
+}

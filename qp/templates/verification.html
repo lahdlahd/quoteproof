@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, check_badge, assurance, status_chip %}
+{% import "_workspace.html" as ws %}
+{% block title %}Verification — {{ p.name }}{% endblock %}
+{% block workspace %}{{ ws.header(p, a, tab, open_findings, security_open, all_docs) }}{% endblock %}
+{% block body %}
+<div class="stack">
+  {{ assurance(a, p, compact=True) }}
+
+  <div>
+    <div class="section-title"><h2>Layer 1 · Source verification</h2><p>Trusted code checks each extracted value against the cell or line it cites.</p></div>
+    <div class="card flush"><div class="table-wrap">
+    <table class="stack-mobile">
+      <thead><tr><th>Supplier</th><th>Currency</th><th class="num">Verified</th><th class="num">Mismatch</th><th class="num">Not found</th><th class="num">Formula / format</th><th class="num">Unaccounted</th></tr></thead>
+      <tbody>
+      {% for d in docs %}{% set r = results.get(d.id) %}
+      <tr>
+        <td data-l="Supplier"><a class="strong" href="/p/{{ p.id }}/doc/{{ d.id }}#items">{{ d.supplier or d.original_name }}</a><div class="small muted">{{ d.original_name }} · <a href="/p/{{ p.id }}/doc/{{ d.id }}#items">view evidence</a></div></td>
+        <td data-l="Currency">{% if d.doc_currency %}<span class="cur">{{ d.doc_currency }}</span>{% endif %}{% if d.comparable == 0 %}<div style="margin-top:4px"><span class="chip neutral">other currency</span></div>{% endif %}</td>
+        {% if r %}
+        {% set vals = r.l1['values'].values()|list %}
+        {% set amounts = vals|rejectattr('kind','equalto','text')|list %}
+        {% set s = r.l1.summary %}
+        <td data-l="Values verified" class="num"><span class="chip {{ 'ok' if s.amounts_verified == s.amounts_total and s.amounts_total else 'warn' }}">{{ s.amounts_verified }}/{{ s.amounts_total }}</span></td>
+        <td data-l="Mismatch" class="num">{% set n = vals|selectattr('status','equalto','MISMATCH')|list|length %}{% if n %}<span class="chip bad">{{ n }}</span>{% else %}<span class="muted">0</span>{% endif %}</td>
+        <td data-l="Not found / uncited" class="num">{% set n = vals|selectattr('status','in',['NOT_FOUND','UNCITED'])|list|length %}{% if n %}<span class="chip bad">{{ n }}</span>{% else %}<span class="muted">0</span>{% endif %}</td>
+        <td data-l="Formula or format issues" class="num">{% set n = vals|selectattr('status','in',['FORMULA_ISSUE','AMBIGUOUS'])|list|length %}{% if n %}<span class="chip warn">{{ n }}</span>{% else %}<span class="muted">0</span>{% endif %}</td>
+        <td data-l="Unaccounted amounts" class="num">{% if s.unaccounted %}<span class="chip warn">{{ s.unaccounted }}</span>{% else %}<span class="muted">0</span>{% endif %}</td>
+        {% else %}
+        <td colspan="5" data-l="Status">{{ status_chip(d.status) }}</td>
+        {% endif %}
+      </tr>
+      {% else %}<tr><td colspan="7"><div class="empty">{{ icon('file') }}<h3>No documents yet</h3><p><a href="/p/{{ p.id }}/documents">Upload a quote</a> to see its verification.</p></div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+    </div></div>
+  </div>
+
+  <div class="anchor" id="arithmetic">
+    <div class="section-title"><h2>Layer 2 · Arithmetic reconciliation</h2><p>Recomputed with Decimal (ROUND_HALF_UP). A difference of 0.01 or less is labelled rounding.</p></div>
+    <div class="card flush"><div class="table-wrap">
+    <table class="stack-mobile">
+      <thead><tr><th>Supplier</th><th>Line checks</th><th>Subtotal, tax and total checks</th><th>AI cross-check</th><th>Overall</th></tr></thead>
+      <tbody>
+      {% for d in docs %}{% set r = results.get(d.id) %}{% if r %}{% set l2 = r.l2 %}
+      {% set lines = l2.checks|selectattr('check','equalto','line')|list %}
+      <tr>
+        <td data-l="Supplier" class="strong">{{ d.supplier or d.original_name }}</td>
+        <td data-l="Line checks">{% set okn = lines|selectattr('status','in',['RECONCILES','ROUNDING'])|list|length %}<span class="chip {{ 'ok' if okn == lines|length and lines else ('neutral' if not lines else 'bad') }}">{{ okn }}/{{ lines|length }} reconcile</span></td>
+        <td data-l="Totals"><div class="stack-sm" style="gap:4px">{% for c in l2.checks if c.check != 'line' %}<div class="row" style="gap:6px"><span class="small">{{ c.check }}</span>{{ check_badge(c.status) }}</div>{% endfor %}</div></td>
+        <td data-l="AI cross-check">{% for k, v in l2.ai_cross_check.items() %}<div class="small">{{ k }}: <span class="chip {{ 'ok' if v.status == 'AGREES' else ('bad' if v.status == 'DISAGREES' else 'neutral') }}">{{ v.status }}</span></div>{% endfor %}</td>
+        <td data-l="Overall">{{ check_badge(l2.status) }}</td>
+      </tr>
+      {% endif %}{% endfor %}
+      </tbody>
+    </table>
+    </div></div>
+    <p class="small muted" style="margin-top:8px">The AI's own arithmetic is displayed for comparison only and never used for totals.</p>
+  </div>
+
+  {% set sec = findings|selectattr('code','in',SECURITY_CODES)|list %}
+  <div>
+    <div class="section-title"><h2>Prompt-injection detection</h2><p>Pattern scanner and AI classifier over every document, plus checks on generated code. Best-effort; the sandbox is the real boundary.</p></div>
+    {% if sec %}
+    <div class="card flush">
+      {% for f in sec %}{% set d = (docs|selectattr('id','equalto',f.document_id)|first) %}
+      <div class="finding security">
+        <div><div class="fh"><span class="chip bad">{{ icon('shield-alert') }}{{ f.code }}</span>{% if f.ref %}<span class="ref">{{ f.ref }}</span>{% endif %}<span class="small muted">{{ (d.supplier or d.original_name) if d else '' }}</span></div>
+        <div class="fd">{{ f.detail }}</div></div>
+        <div>{% if f.status == 'open' %}<span class="chip warn">{{ icon('clock') }}Awaiting decision</span> <a class="small" href="/p/{{ p.id }}/review#findings">Decide</a>{% else %}{{ status_chip(f.status) }}<div class="small muted" style="margin-top:4px">Decision recorded in the review log</div>{% endif %}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="callout ok">{{ icon('shield') }}<div><h4>No injection patterns found</h4><p>No document in this comparison triggered the pattern scanner or the AI classifier.</p></div></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

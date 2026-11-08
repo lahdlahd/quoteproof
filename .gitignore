@@ -1,0 +1,12 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+fixtures/_*.xlsx
+# never commit evidence archives, keys or local data
+qp-evidence/
+*.tar.gz
+*.sqlite
+*.sqlite-*
+inference_key*
+web_secret*
+.env

@@ -1,0 +1,45 @@
+[Unit]
+Description=QuoteProof web app (internet-facing via Caddy; no inference key, no Docker)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qp-web
+Group=qp-web
+# qp-files: write uploads. qp-db: shared SQLite database. NOT docker, NOT qp-sock.
+SupplementaryGroups=qp-files qp-db
+Environment=QP_WEB_CONFIG=/etc/qp-web/web.json
+ExecStart=/opt/qp/venv-web/bin/python -I -B /opt/qp/app/run_web.py
+Restart=on-failure
+RestartSec=3
+LoadCredential=web_secret:/etc/qp-secrets/web_secret
+UMask=0027
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ReadWritePaths=/srv/qp/uploads /srv/qp/db
+InaccessiblePaths=-/srv/qp/indexes -/run/qp-sandboxd -/var/run/docker.sock -/run/docker.sock -/run/containerd -/etc/qp-secrets -/etc/qp -/etc/qp-worker
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# The web app needs no outbound network at all: only Caddy on localhost talks to it.
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}QuoteProof — supplier quotes you can prove{% endblock %}
+{% block page %}
+<header class="public-top">
+  <div class="inner">
+    <a class="brand" href="/"><span class="brand-mark"><svg aria-hidden="true"><use href="#i-brand"/></svg></span>QuoteProof</a>
+    <nav>
+      <a class="hide-sm" href="#how">How it works</a>
+      <a class="hide-sm" href="/containment">Containment evidence</a>
+      <a class="btn teal sm" href="/app">Open app {{ icon('arrow', 'sm') }}</a>
+    </nav>
+  </div>
+</header>
+<main id="main" tabindex="-1">
+<section class="wrap">
+  <div class="hero">
+    <div>
+      <span class="chip info">{{ icon('shield', 'sm') }}AI-written code, sandboxed in gVisor</span>
+      <h1 style="margin-top:16px">Compare supplier quotes you can prove.</h1>
+      <p class="lead">Upload CSV, Excel or PDF quotations. An AI writes a one-off extractor for each layout and it runs in an isolated sandbox. Trusted code then checks every number against its source and redoes the arithmetic, and a person confirms which items are really equivalent.</p>
+      <div class="btn-row">
+        <a class="btn" href="/new">{{ icon('plus') }}Start a comparison</a>
+        <a class="btn secondary" href="/containment">{{ icon('shield') }}See containment evidence</a>
+      </div>
+      <p class="small muted" style="margin-top:18px">{{ icon('lock', 'sm') }} No login. A comparison is private to its link and deleted automatically after 24 hours.</p>
+    </div>
+    <svg class="illus" viewBox="0 0 520 420" role="img" aria-labelledby="ill-t">
+      <title id="ill-t">A supplier quote passes through the gVisor sandbox, then three separate checks: source verification, arithmetic reconciliation and human-confirmed equivalence.</title>
+      <rect x="0" y="0" width="520" height="420" rx="18" fill="#0B1B33"/>
+      <g stroke="#2A4673" stroke-width="1" opacity=".55">{% for i in range(1,13) %}<path d="M{{ i*40 }} 0V420"/>{% endfor %}{% for i in range(1,11) %}<path d="M0 {{ i*40 }}H520"/>{% endfor %}</g>
+      <!-- quote document -->
+      <g transform="translate(36 52)">
+        <rect width="128" height="160" rx="10" fill="#fff"/>
+        <path d="M100 0h18a10 10 0 0 1 10 10v18z" fill="#E3E8EF"/>
+        <rect x="14" y="16" width="62" height="8" rx="4" fill="#0F1B2D"/>
+        <rect x="14" y="32" width="40" height="6" rx="3" fill="#CBD3DF"/>
+        {% for r in range(5) %}<rect x="14" y="{{ 54 + r*18 }}" width="58" height="6" rx="3" fill="#CBD3DF"/><rect x="84" y="{{ 54 + r*18 }}" width="30" height="6" rx="3" fill="{{ '#F2A60D' if r == 3 else '#8A96A8' }}"/>{% endfor %}
+        <rect x="80" y="104" width="38" height="14" rx="3" fill="none" stroke="#F2A60D" stroke-width="2"/>
+        <text x="14" y="150" font-family="Inter,system-ui" font-size="11" fill="#526070">quote.xlsx · ₦ / $</text>
+      </g>
+      <!-- arrow into sandbox -->
+      <path d="M176 132h44" stroke="#5CC8CF" stroke-width="2.5" stroke-dasharray="5 5"/><path d="M216 125l9 7-9 7" fill="none" stroke="#5CC8CF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- sandbox -->
+      <g transform="translate(234 40)">
+        <rect width="250" height="204" rx="14" fill="#12284A" stroke="#5CC8CF" stroke-width="2"/>
+        <rect x="14" y="14" width="98" height="24" rx="12" fill="#0B7A84"/>
+        <text x="63" y="30" text-anchor="middle" font-family="Inter,system-ui" font-size="11.5" font-weight="650" fill="#fff">gVisor sandbox</text>
+        <rect x="18" y="54" width="214" height="78" rx="8" fill="#0D1626"/>
+        <text x="30" y="76" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#5CC8CF">def extract(index):</text>
+        <text x="44" y="94" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#C9D3E3">rows = index["cells"]</text>
+        <text x="44" y="112" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#C9D3E3">return line_items(rows)</text>
+        <g font-family="Inter,system-ui" font-size="10.5" fill="#C9D3E3">
+          <circle cx="26" cy="152" r="4" fill="#34C77B"/><text x="36" y="156">no network</text>
+          <circle cx="110" cy="152" r="4" fill="#34C77B"/><text x="120" y="156">no secrets</text>
+          <circle cx="186" cy="152" r="4" fill="#34C77B"/><text x="196" y="156">read-only</text>
+          <circle cx="26" cy="170" r="4" fill="#34C77B"/><text x="36" y="174">non-root</text>
+          <circle cx="110" cy="170" r="4" fill="#34C77B"/><text x="120" y="174">no capabilities</text>
+          <circle cx="26" cy="188" r="4" fill="#34C77B"/><text x="36" y="192">container destroyed after each run</text>
+        </g>
+      </g>
+      <!-- flow down to three layers -->
+      <path d="M359 248v14" stroke="#5CC8CF" stroke-width="2.5" stroke-dasharray="5 5"/>
+      <path d="M100 262H420" stroke="#2A4673" stroke-width="2"/>
+      {% for x, n, t1, t2, col in [(36,'1','Source','verification','#34C77B'),(196,'2','Arithmetic','reconciliation','#34C77B'),(356,'3','Human','confirmation','#F2A60D')] %}
+      <g transform="translate({{ x }} 276)">
+        <path d="M64 -14v14" stroke="#2A4673" stroke-width="2"/>
+        <rect width="128" height="112" rx="12" fill="#fff"/>
+        <rect width="5" height="112" rx="2.5" fill="{{ col }}"/>
+        <rect x="16" y="14" width="22" height="18" rx="4" fill="#EAF0F7"/><text x="27" y="27" text-anchor="middle" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#1B3A66">{{ n }}</text>
+        <text x="16" y="54" font-family="Inter,system-ui" font-size="12.5" font-weight="650" fill="#0F1B2D">{{ t1 }}</text>
+        <text x="16" y="70" font-family="Inter,system-ui" font-size="12.5" font-weight="650" fill="#0F1B2D">{{ t2 }}</text>
+        {% if n == '3' %}<rect x="16" y="82" width="94" height="18" rx="9" fill="#FFF3D6"/><text x="63" y="95" text-anchor="middle" font-family="Inter,system-ui" font-size="10.5" font-weight="650" fill="#7A4A00">person confirms</text>
+        {% else %}<rect x="16" y="82" width="78" height="18" rx="9" fill="#E5F4EB"/><text x="55" y="95" text-anchor="middle" font-family="Inter,system-ui" font-size="10.5" font-weight="650" fill="#11693F">trusted code</text>{% endif %}
+      </g>
+      {% endfor %}
+    </svg>
+  </div>
+</section>
+
+<section class="wrap anchor" id="how" style="padding-bottom:40px">
+  <div class="section-title"><h2>How every quote is checked</h2><p>Five steps, three separate assurances, never merged into one “verified”.</p></div>
+  <ol class="how" style="padding:0;margin:0">
+    <li><span class="n">1</span><h4>Index in isolation</h4><p>Our fixed indexer reads the raw file inside the sandbox. Uploads are never opened by the web app.</p></li>
+    <li><span class="n">2</span><h4>AI writes an extractor</h4><p>A Vultr Serverless Inference model writes code for this layout. It runs in gVisor, with up to two retries guided by verification feedback.</p></li>
+    <li><span class="n">3</span><h4>Source verification</h4><p>Every value must match the cell or line it cites. Hidden instructions are flagged as prompt injection.</p></li>
+    <li><span class="n">4</span><h4>Arithmetic reconciliation</h4><p>Quantity × price, subtotals, tax and totals are recomputed with Decimal. The AI's own maths is never used.</p></li>
+    <li><span class="n">5</span><h4>Human confirmation</h4><p>The AI only proposes which items match. A named person confirms equivalence, with a reason, on the record.</p></li>
+  </ol>
+
+  <div class="grid g3" style="margin-top:28px">
+    <div class="card">
+      <h3 class="row" style="gap:8px">{{ icon('shield') }}Containment</h3>
+      {% if selftest_latest %}
+      <p style="margin:10px 0 6px"><span class="chip {{ 'ok' if selftest_latest.passed else 'bad' }}">{{ icon('check' if selftest_latest.passed else 'x') }}{{ 'All containment tests passed' if selftest_latest.passed else 'Containment self-test failed' }}</span></p>
+      <p class="small muted">Isolation: {{ 'gVisor (runsc) + hardened Docker' if selftest_latest.report.isolation_mode == 'gvisor' else 'Docker (runc) + hardening' }} · last run {{ selftest_latest.created_at|ts }}</p>
+      {% else %}<p class="small muted" style="margin-top:10px">No self-test has run yet.</p>{% endif %}
+      <a class="btn secondary sm" href="/containment">Open the evidence {{ icon('arrow', 'sm') }}</a>
+    </div>
+    <div class="card">
+      <h3 class="row" style="gap:8px">{{ icon('columns') }}One currency per comparison</h3>
+      <p class="small muted" style="margin-top:10px">Each comparison is in NGN or USD. A quote in the other currency is shown separately and is never added to totals or converted.</p>
+    </div>
+    <div class="card">
+      <h3 class="row" style="gap:8px">{{ icon('file-text') }}Honest reports</h3>
+      <p class="small muted" style="margin-top:10px">Every amount is labelled Quoted, Calculated, Estimated or Unknown. Unknown is never treated as zero. The report stays a Draft until all three layers are complete.</p>
+    </div>
+  </div>
+</section>
+</main>
+<footer class="foot" style="justify-content:center">{{ icon('lock', 'sm') }}AI-written extractors run only inside a no-network, read-only, non-root sandbox. Every number is checked by trusted code.</footer>
+{% endblock %}

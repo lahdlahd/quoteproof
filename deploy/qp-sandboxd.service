@@ -1,0 +1,48 @@
+[Unit]
+Description=QuoteProof sandbox supervisor (only process with Docker access)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=qp-sandbox
+# Primary group qp-sock: the socket and its folder get this group, so only
+# members (qp-worker) can connect.
+Group=qp-sock
+# qp-sandbox must be listed explicitly: with Group=qp-sock, systemd does not
+# add the user's own primary group, and /etc/qp is root:qp-sandbox 0750.
+SupplementaryGroups=qp-sandbox docker qp-files
+ExecStart=/usr/bin/python3 -I -B /opt/qp/app/run_sandboxd.py --config /etc/qp/sandboxd.json
+Restart=on-failure
+RestartSec=3
+
+RuntimeDirectory=qp-sandboxd
+RuntimeDirectoryMode=0750
+UMask=0007
+
+# Hardening: sandboxd needs only the Docker unix socket, its staging folder and its home.
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ReadWritePaths=/srv/qp/staging /var/lib/qp-sandbox
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+# No network sockets at all: only unix sockets (its own + Docker's).
+RestrictAddressFamilies=AF_UNIX
+IPAddressDeny=any
+
+[Install]
+WantedBy=multi-user.target

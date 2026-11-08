@@ -1,0 +1,19 @@
+{% from "_macros.html" import icon %}
+<form method="post" action="/p/{{ p.id }}/upload" enctype="multipart/form-data" class="stack-sm">
+  <input type="hidden" name="t" value="{{ token }}">
+  <label class="drop">
+    {{ icon('upload') }}
+    <b>Choose a supplier quote</b>
+    <span class="help">CSV, XLSX or digital PDF, up to {{ max_mb }} MB. Scanned PDFs and macro workbooks are not supported.</span>
+    <input type="file" name="file" accept=".csv,.xlsx,.pdf" required>
+    <span class="chosen small strong"></span>
+  </label>
+  <label class="field">This quote's currency
+    <select name="currency">
+      <option value="NGN" {{ 'selected' if p.currency == 'NGN' }}>NGN (₦)</option>
+      <option value="USD" {{ 'selected' if p.currency == 'USD' }}>USD ($)</option>
+    </select>
+    <span class="help">Checked against what the document says and what the AI reads. A quote in a different currency from this comparison ({{ p.currency }}) is shown separately and never converted.</span>
+  </label>
+  <div class="btn-row"><button type="submit">{{ icon('upload', 'sm') }}Upload and process</button></div>
+</form>

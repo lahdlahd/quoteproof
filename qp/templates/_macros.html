@@ -1,0 +1,87 @@
+{# Shared components. Existing macro names and wording are kept (tests and the approved wording depend on them). #}
+{% macro icon(name, cls='') -%}<svg class="icon {{ cls }}" aria-hidden="true" focusable="false"><use href="#i-{{ name }}"/></svg>{%- endmacro %}
+
+{# Provenance labels: Quoted / Calculated / Estimated / Unknown. A distinct tag shape, never a status colour. #}
+{% macro label(fig) -%}
+{%- if fig.value is not none or fig.label != 'Unknown' -%}
+{%- set cls = {'Quoted':'quoted','Estimated':'est','Unknown':'unk'}.get(fig.label, 'calc' if fig.label and fig.label.startswith('Calculated') else 'unk') -%}
+{%- set ic = {'quoted':'quote','calc':'calc','est':'pencil','unk':'help'}[cls] -%}
+<span class="tag {{ cls }}" title="Cost label">{{ icon(ic) }}{{ fig.label }}</span>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro amount(fig, cur) -%}
+{%- if fig.value is none -%}<span class="tag unk">{{ icon('help') }}Unknown</span>{%- else -%}{{ CURRENCY_SYMBOL.get(cur, '') }}{{ fig.value|money }}{%- endif -%}
+{%- endmacro %}
+
+{# Layer 1 evidence: status + cited location, and the cited source text shown visibly (not hover-only). #}
+{% macro source_badge(v, k='') -%}
+<div class="ev">
+<div class="ev-line">{% if k %}<span class="ev-k">{{ k }}</span>{% endif %}
+{%- if v is none -%}<span class="chip neutral">Source: n/a</span>
+{%- elif v.status == 'VERIFIED' -%}<span class="chip ok">{{ icon('check') }}Matches source</span> <span class="ref">{{ v.cite }}</span>
+{%- elif v.status == 'MISMATCH' -%}<span class="chip bad">{{ icon('x') }}Mismatch</span> <span class="ref">{{ v.cite }}</span>
+{%- elif v.status == 'NOT_FOUND' -%}<span class="chip bad">{{ icon('x') }}Citation not found</span> <span class="ref">{{ v.cite }}</span>
+{%- elif v.status == 'UNCITED' -%}<span class="chip bad">{{ icon('x') }}Uncited</span>
+{%- elif v.status == 'FORMULA_ISSUE' -%}<span class="chip warn">{{ icon('alert') }}Formula issue</span> <span class="ref">{{ v.cite }}</span>
+{%- elif v.status == 'AMBIGUOUS' -%}<span class="chip warn">{{ icon('alert') }}Ambiguous format</span>
+{%- else -%}<span class="chip warn">{{ v.status }}</span>{%- endif -%}
+{%- for f in v.flags if v -%} <span class="chip warn">{{ f }}</span>{%- endfor -%}
+</div>
+{%- if v and v.source_text is not none and v.status in ('VERIFIED','MISMATCH','FORMULA_ISSUE','AMBIGUOUS') %}
+<div class="ev-src">Source text: <q>{{ v.source_text }}</q>{% if v.status == 'MISMATCH' %} · extracted <q>{{ v.value_str }}</q>{% endif %}</div>{% endif %}
+{%- if v and v.formula %}<div class="ev-src">Formula: <q>{{ v.formula }}</q> · cached value shown above</div>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro check_badge(status) -%}
+{%- if status == 'RECONCILES' -%}<span class="chip ok">{{ icon('check') }}Reconciles</span>
+{%- elif status == 'ROUNDING' -%}<span class="chip ok">{{ icon('check') }}Rounding (≤0.01)</span>
+{%- elif status == 'FAILS' -%}<span class="chip bad">{{ icon('x') }}Does not reconcile</span>
+{%- elif status == 'INCOMPLETE' or status == 'NOT_CHECKED' -%}<span class="chip neutral">{{ icon('help') }}Not checked (unknown inputs)</span>
+{%- else -%}<span class="chip neutral">{{ status }}</span>{%- endif -%}
+{%- endmacro %}
+
+{# The architecture's headline counters, word for word (clarification 2). #}
+{% macro headline(a) -%}
+<p class="small muted counters">Source: {{ a.source.verified }}/{{ a.source.total }} ✓ · Arithmetic: {{ a.arithmetic.reconciled }}/{{ a.arithmetic.total }} suppliers ✓ · Equivalence: {{ a.equivalence.confirmed_items }}/{{ a.equivalence.total_items }} items confirmed</p>
+{%- endmacro %}
+
+{# Three assurance layers, always in this order and these words, plus the Complete/Draft gate. #}
+{% macro assurance(a, p, compact=False) -%}
+{%- set s = a.source -%}{%- set ar = a.arithmetic -%}{%- set e = a.equivalence -%}
+{%- set s_state = 'none' if not s.total else ('ok' if s.verified == s.total else 'warn') -%}
+{%- set a_state = 'none' if not ar.total else ('ok' if ar.reconciled == ar.total else 'bad') -%}
+{%- set e_state = 'none' if not e.total_items else ('ok' if e.confirmed_items and not e.proposed_groups else 'warn') -%}
+<div class="assure{{ ' compact' if compact }}">
+  <a class="layer {{ s_state }}" href="/p/{{ p.id }}/verification" style="color:inherit;text-decoration:none">
+    <span class="lh"><span class="ln">1</span>Source verification</span>
+    <span class="lv"><b>{{ s.verified }}/{{ s.total }}</b>{% if s_state == 'ok' %}<span class="chip ok">{{ icon('check') }}All values match</span>{% elif s_state == 'warn' %}<span class="chip warn">{{ icon('alert') }}{{ s.total - s.verified }} not verified</span>{% else %}<span class="chip neutral">No values yet</span>{% endif %}</span>
+    {% if not compact %}<span class="lm">Every amount matches the cell or line it cites in the document.</span>{% endif %}
+  </a>
+  <a class="layer {{ a_state }}" href="/p/{{ p.id }}/verification#arithmetic" style="color:inherit;text-decoration:none">
+    <span class="lh"><span class="ln">2</span>Arithmetic reconciliation</span>
+    <span class="lv"><b>{{ ar.reconciled }}/{{ ar.total }}</b>{% if a_state == 'ok' %}<span class="chip ok">{{ icon('check') }}Suppliers reconcile</span>{% elif a_state == 'bad' %}<span class="chip bad">{{ icon('x') }}{{ ar.total - ar.reconciled }} do not reconcile</span>{% else %}<span class="chip neutral">No suppliers yet</span>{% endif %}</span>
+    {% if not compact %}<span class="lm">Lines, subtotals, tax and totals recomputed with Decimal by trusted code.</span>{% endif %}
+  </a>
+  <a class="layer {{ e_state }}" href="/p/{{ p.id }}/review#matches" style="color:inherit;text-decoration:none">
+    <span class="lh"><span class="ln">3</span>Human-confirmed equivalence</span>
+    <span class="lv"><b>{{ e.confirmed_items }}/{{ e.total_items }}</b>{% if e.proposed_groups %}<span class="chip warn">{{ icon('clock') }}{{ e.proposed_groups }} AI proposal{{ 's' if e.proposed_groups != 1 }} to confirm</span>{% elif e_state == 'ok' %}<span class="chip ok">{{ icon('check') }}Confirmed by a person</span>{% elif e.total_items %}<span class="chip warn">{{ icon('clock') }}Not confirmed yet</span>{% else %}<span class="chip neutral">No items yet</span>{% endif %}</span>
+    {% if not compact %}<span class="lm">A person confirms items are like-for-like. Never machine-verified.</span>{% endif %}
+  </a>
+  <div class="gate {{ 'complete' if a.headline == 'Complete' else 'draft' }}">
+    <span class="gt">Report status</span>
+    <span class="gv">{{ icon('check' if a.headline == 'Complete' else 'clock') }}{{ a.headline }}</span>
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro status_chip(s) -%}
+{%- set ok = ['processed','done','passed','clean','PASS','received','accepted','corrected','resolved','confirmed'] -%}
+{%- set bad = ['failed','rejected','FAIL','flagged','error','extraction_failed'] -%}
+<span class="chip {{ 'ok' if s in ok else ('bad' if s in bad or 'fail' in s else 'warn') }}">{{ icon('check' if s in ok else ('x' if s in bad or 'fail' in s else 'clock')) }}{{ s }}</span>
+{%- endmacro %}
+
+{% macro empty(ic, title, text) -%}
+<div class="empty">{{ icon(ic) }}<h3>{{ title }}</h3><p>{{ text }}</p>{{ caller() if caller }}</div>
+{%- endmacro %}

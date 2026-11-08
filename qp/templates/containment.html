@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Containment & Security — QuoteProof{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div><h1>Containment &amp; Security</h1>
+  <p class="sub">These tests are fixed code written by us, not by the AI. They run in exactly the same sandbox configuration as
+  AI-written extractors. Each one compares what was observed with what was expected; verdicts are decided outside the sandbox.</p></div>
+  <form method="post" action="/containment/run" class="inline">
+    <input type="hidden" name="t" value="{{ token }}">
+    <button {{ 'disabled' if running }}>{{ icon('refresh' if running else 'play', 'sm') }}{{ 'Self-test running…' if running else 'Run containment self-test now' }}</button>
+  </form>
+</div>
+{% if running %}<script>setTimeout(()=>location.reload(), 2000)</script>{% endif %}
+
+{% if st %}
+{% set r = st.report %}
+{% set npass = r.tests|selectattr('verdict','equalto','PASS')|list|length %}
+<div class="card raised" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:24px;border-left:5px solid {{ 'var(--ok-solid)' if st.passed else 'var(--bad-solid)' }}">
+  <div style="width:52px;height:52px;border-radius:12px;display:grid;place-items:center;background:{{ 'var(--ok-bg)' if st.passed else 'var(--bad-bg)' }};color:{{ 'var(--ok)' if st.passed else 'var(--bad)' }}">{{ icon('shield' if st.passed else 'shield-alert', 'lg') }}</div>
+  <div style="flex:1;min-width:240px">
+    <div class="overline">Latest self-test · {{ st.created_at|ts }}</div>
+    <div style="font-size:22px;font-weight:650;margin-top:2px;color:{{ 'var(--ok)' if st.passed else 'var(--bad)' }}">{{ 'ALL CONTAINMENT TESTS PASSED' if st.passed else 'CONTAINMENT SELF-TEST FAILED' }}</div>
+    <div class="small muted" style="margin-top:2px">{{ npass }} of {{ r.tests|length }} tests passed · isolation: <b style="color:var(--ink)">{{ 'gVisor (runsc) + hardened Docker' if r.isolation_mode == 'gvisor' else 'Docker (runc) + hardening' }}</b></div>
+  </div>
+  {% if r.probe_envelope %}<dl class="kv" style="min-width:240px">
+    <dt>Probe runtime</dt><dd>{{ r.probe_envelope.runtime }}</dd><dt>Exit code</dt><dd>{{ r.probe_envelope.exit_code }}</dd>
+    <dt>Duration</dt><dd>{{ r.probe_envelope.duration_ms }} ms</dd><dt>Container removed</dt><dd>{{ r.probe_envelope.removed }}</dd></dl>{% endif %}
+</div>
+
+{% set notes = {
+  "isolation_runtime": "Only the first line, \"Starting gVisor...\", is evidence: it shows dmesg was answered by gVisor's own kernel (plain Docker refuses dmesg). The lines after it are gVisor's built-in placeholder boot messages, picked at random by design (pkg/sentry/kernel/syslog.go). They are not real kernel events.",
+  "privileges": "Seccomp 0 is expected here. Under gVisor the AI code's system calls are handled by gVisor's user-space kernel, not the host kernel; Docker's seccomp profile is not loaded inside the sandbox (runsc --oci-seccomp is off by default). On the host, gVisor's own sentry and gofer processes run under seccomp filters (Seccomp 2, checked on this VM on 7 Nov 2026)."
+} %}
+{% set proves = {
+  "network_blocked": "AI-written code cannot reach the internet or any other machine.",
+  "secret_isolation": "No API keys, secrets or host paths are visible inside the sandbox.",
+  "read_only_filesystem": "The code cannot change the system or its input; only a small /tmp is writable.",
+  "process_limit": "Spawning too many processes is refused by the process limit.",
+  "privileges": "The code runs as an unprivileged user with no capabilities and no way to gain new privileges.",
+  "isolation_runtime": "Containers really run under gVisor, with a kernel separate from the host's.",
+  "execution_timeout": "Runaway code is killed at the time limit.",
+  "memory_limit": "Code that tries to use too much memory is stopped.",
+  "lifecycle_cleanup": "Every container and its staging folder is destroyed after the run."
+} %}
+<div class="section-title"><h2>Test results</h2><p>Expected behaviour, the verdict, and the raw observation exactly as the probe reported it.</p></div>
+<div class="stack-sm" style="margin-bottom:28px">
+{% for t in r.tests %}
+<div class="test-card">
+  <div class="th">
+    <span class="chip {{ 'ok' if t.verdict == 'PASS' else ('bad' if t.verdict == 'FAIL' else 'warn') }}">{{ icon('check' if t.verdict == 'PASS' else ('x' if t.verdict == 'FAIL' else 'alert')) }}{{ t.verdict }}</span>
+    <h3 style="font-family:var(--mono);font-size:14px">{{ t.test }}</h3>
+    {% if proves.get(t.test) %}<span class="small muted">{{ proves[t.test] }}</span>{% endif %}
+  </div>
+  <div class="tb">
+    <div><div class="overline" style="margin-bottom:4px">Expected</div><div class="small">{{ t.expected }}</div>
+      {% if notes.get(t.test) %}<div class="note"><b>Note:</b> {{ notes[t.test] }}</div>{% endif %}</div>
+    <div><div class="overline" style="margin-bottom:4px">Observed (raw evidence)</div><pre>{{ t.observed|tojson(indent=2) }}</pre></div>
+  </div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<div class="card" style="margin-bottom:24px"><div class="empty">{{ icon('shield') }}<h3>No self-test has run yet</h3><p>Run the self-test to record real observations from the sandbox.</p></div></div>
+{% endif %}
+
+<div class="section-title"><h2>Two separate protections</h2><p>Detection is best-effort; containment is the boundary that holds even if detection misses.</p></div>
+<div class="grid g2" style="margin-bottom:24px">
+  <div class="card"><h3 class="row" style="gap:8px;margin-bottom:8px">{{ icon('search') }}1. Prompt-injection detection (best-effort)</h3>
+  <p class="small" style="margin:0">Pattern scanner + AI classifier over every uploaded document, plus checks on the generated code.
+  Hits become review items. Upload the poisoned sample quote to see it flagged on the timeline.</p></div>
+  <div class="card"><h3 class="row" style="gap:8px;margin-bottom:8px">{{ icon('box') }}2. Sandbox containment (the real boundary)</h3>
+  <p class="small" style="margin:0">Even if injected text fools the AI into writing hostile code, that code runs with no network, no secrets,
+  a read-only filesystem, a non-root user, no capabilities, process/memory/time limits, and the container is destroyed.
+  The test results above are the evidence.</p></div>
+</div>
+
+<div class="section-title"><h2>Who can do what</h2><p>Four processes under four Linux users; each holds only the access it needs.</p></div>
+<div class="card flush"><div class="table-wrap"><table class="stack-mobile">
+<thead><tr><th>Process</th><th>Role</th><th>Has</th><th>Does not have</th></tr></thead>
+<tbody>
+<tr><td data-l="Process" class="strong">qp-web</td><td data-l="Role">This website</td><td data-l="Has">Upload folder (write), database</td><td data-l="Does not have">Docker access, the inference key</td></tr>
+<tr><td data-l="Process" class="strong">qp-worker</td><td data-l="Role">Jobs, AI calls, verification</td><td data-l="Has">Inference key, database, supervisor socket</td><td data-l="Does not have">Docker access, raw uploaded files</td></tr>
+<tr><td data-l="Process" class="strong">qp-sandboxd</td><td data-l="Role">Sandbox supervisor</td><td data-l="Has">Docker, with three fixed commands and fixed container settings</td><td data-l="Does not have">Network listener, inference key</td></tr>
+<tr><td data-l="Process" class="strong">Sandbox containers</td><td data-l="Role">Indexer, AI-written extractor, self-test probe</td><td data-l="Has">Read-only input, small /tmp</td><td data-l="Does not have">Network, secrets, root, capabilities</td></tr>
+</tbody></table></div></div>
+{% endblock %}

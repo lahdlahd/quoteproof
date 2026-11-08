@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, label, amount, check_badge, headline, assurance %}
+{% import "_workspace.html" as ws %}
+{% block title %}Report — {{ p.name }}{% endblock %}
+{% block workspace %}{{ ws.header(p, a, tab, open_findings, security_open, all_docs) }}{% endblock %}
+{% block body %}
+<div class="stack">
+<div class="btn-row noprint"><button onclick="window.print()">{{ icon('printer', 'sm') }}Print / save as PDF</button><span class="small muted">A4 layout; navigation and buttons are left out.</span></div>
+
+<div class="card" style="padding:0;overflow:hidden">
+  <div style="background:var(--navy-950);color:#fff;padding:24px 28px">
+    <div class="overline" style="color:#8FA3C0">Quotation comparison report</div>
+    <h1 style="color:#fff;margin-top:6px">Quotation comparison report — {{ p.name }}</h1>
+    <div class="small" style="color:#C9D3E3;margin-top:6px">Generated {{ generated }} · {{ comp.note }}</div>
+  </div>
+  <div style="padding:20px 28px" class="stack-sm">
+    {{ assurance(a, p) }}
+    {{ headline(a) }}
+    <p class="small muted" style="margin:0">Three separate assurances, never merged: <b>Source</b> = trusted code matched each value to its cited
+    cell or line; <b>Arithmetic</b> = our Decimal engine re-computed every line and total; <b>Equivalence</b> = a person
+    confirmed that items are like-for-like (never machine-verified).</p>
+  </div>
+</div>
+
+{% if expl and expl.status == 'accepted' %}
+<div class="card"><h3 style="margin-bottom:8px">Summary <span class="chip info">AI-written, every number checked against the verified figures</span></h3><p>{{ expl.text }}</p>
+<p class="small muted" style="margin:0">Model {{ expl.model }}</p></div>
+{% elif expl and expl.status == 'rejected' %}
+<div class="callout warn">{{ icon('alert') }}<div><h4>AI summary withheld</h4><p>The AI summary was rejected because it contained numbers that are not in the verified figures. No summary is shown.</p></div></div>
+{% endif %}
+
+<div class="card flush">
+  <div class="card-head"><h3>Comparison</h3><div class="legend"><span class="tag quoted">Quoted</span><span class="tag calc">Calculated</span><span class="tag est">Estimated</span><span class="tag unk">Unknown</span></div></div>
+  <div class="table-wrap"><table>
+  <thead><tr><th>Item group</th>{% for s in comp.suppliers %}<th class="right">{{ s.supplier }}</th>{% endfor %}<th>Equivalence</th></tr></thead>
+  <tbody>
+  {% for r in comp.rows %}
+  <tr><td class="strong">{{ r.label }}</td>
+    {% for s in comp.suppliers %}{% set c = r.cells[s.doc_id] %}
+    <td class="num">{% if c.status == 'not_offered' %}<span class="tag unk">Not offered</span>{% else %}{{ amount(c, p.currency) }} {{ label(c) }}{% endif %}</td>{% endfor %}
+    <td class="small"><span class="chip ok">Confirmed by {{ r.equivalence.by }}</span></td></tr>
+  {% else %}<tr><td colspan="{{ comp.suppliers|length + 2 }}" class="muted">No items confirmed as equivalent yet.</td></tr>
+  {% endfor %}
+  {% for cr in comp.charges %}
+  <tr><td><i>{{ cr.kind|capitalize }}</i></td>{% for s in comp.suppliers %}{% set c = cr.cells[s.doc_id] %}<td class="num">{{ amount(c, p.currency) }} {{ label(c) }}</td>{% endfor %}<td></td></tr>
+  {% endfor %}
+  <tr class="total"><td>Total of known amounts</td>{% for s in comp.suppliers %}{% set t = comp.totals[s.doc_id] %}
+  <td class="num">{{ CURRENCY_SYMBOL.get(p.currency,'') }}{{ t.known_total|money }} <span class="tag calc">{{ t.label }}</span>{% if not t.complete %}<div class="small muted" style="font-weight:400">plus unknown: {{ t.unknown_components|join('; ') }}</div>{% endif %}</td>{% endfor %}<td></td></tr>
+  <tr><td>Arithmetic</td>{% for s in comp.suppliers %}<td class="right">{{ check_badge(docs[s.doc_id].l2.status) }}</td>{% endfor %}<td></td></tr>
+  <tr><td>Source</td>{% for s in comp.suppliers %}{% set v = docs[s.doc_id].l1.summary %}<td class="right"><span class="chip {{ 'ok' if v.amounts_verified == v.amounts_total else 'warn' }}">{{ v.amounts_verified }}/{{ v.amounts_total }} values match source</span></td>{% endfor %}<td></td></tr>
+  </tbody></table></div>
+</div>
+
+<div class="grid g2">
+  {% if comp.not_compared_yet %}
+  <div class="card"><h3 style="margin-bottom:8px">Not compared yet</h3>
+  <ul class="small" style="margin:0;padding-left:18px">{% for x in comp.not_compared_yet %}<li>{{ (comp.suppliers|selectattr('doc_id','equalto',x.doc_id)|first).supplier }} — {{ x.description }} ({{ x.equivalence }})</li>{% endfor %}</ul></div>
+  {% endif %}
+  {% if comp.not_comparable_currency %}
+  <div class="card"><h3 style="margin-bottom:8px">Not comparable: different currency</h3>
+  <ul class="small" style="margin:0;padding-left:18px">{% for x in comp.not_comparable_currency %}<li>{{ x.supplier }} ({{ x.currency }}) — not added, not converted</li>{% endfor %}</ul></div>
+  {% endif %}
+</div>
+
+<div class="card flush print-break">
+  <div class="card-head"><h3>Findings</h3></div>
+  <div class="table-wrap"><table class="compact">
+  <thead><tr><th>Finding</th><th>Where</th><th>Detail</th><th>Status</th></tr></thead>
+  <tbody>{% for f in findings %}<tr><td><span class="chip {{ 'bad' if f.code in SECURITY_CODES or f.severity == 'block' else ('neutral' if f.severity == 'info' else 'warn') }}">{{ f.code }}</span></td><td>{% if f.ref or f.path %}<span class="ref">{{ f.ref or f.path }}</span>{% endif %}</td><td class="small" style="overflow-wrap:anywhere">{{ f.detail }}</td><td>{{ f.status }}</td></tr>
+  {% else %}<tr><td colspan="4" class="muted">None.</td></tr>{% endfor %}</tbody></table></div>
+</div>
+
+<div class="card flush">
+  <div class="card-head"><h3>Review decisions</h3></div>
+  <div class="table-wrap"><table class="compact">
+  <thead><tr><th>Reviewer</th><th>Target</th><th>Action</th><th>Reason</th></tr></thead>
+  <tbody>{% for x in log %}<tr><td>{{ x.reviewer }} (self-declared)</td><td>{{ x.target_type }}</td><td>{{ x.action }}</td><td class="small">{{ x.reason }}</td></tr>
+  {% else %}<tr><td colspan="4" class="muted">No decisions recorded.</td></tr>{% endfor %}</tbody></table></div>
+</div>
+
+<div class="card">
+  <h3 style="margin-bottom:8px">How this was produced</h3>
+  <p class="small" style="margin:0">Each quote was read by a fixed indexer inside an isolated container. An AI model on Vultr Serverless Inference
+  wrote extraction code for each layout, which ran in a separate isolated container with no network, no secrets, a read-only
+  filesystem, a process limit and a time limit; each container was destroyed after use.
+  {% if selftest %}Latest containment self-test: <b>{{ 'passed' if selftest.passed else 'FAILED' }}</b>
+  (isolation: {{ 'gVisor (runsc) + hardened Docker' if selftest.report.isolation_mode == 'gvisor' else 'Docker (runc) + hardening' }}).{% endif %}
+  All amounts in {{ p.currency }} as quoted. No currency conversion performed.</p>
+</div>
+</div>
+{% endblock %}

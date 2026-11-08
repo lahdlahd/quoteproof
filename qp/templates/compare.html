@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, label, amount, check_badge, headline, assurance %}
+{% import "_workspace.html" as ws %}
+{% block title %}Results — {{ p.name }}{% endblock %}
+{% block workspace %}{{ ws.header(p, a, tab, open_findings, security_open, all_docs) }}{% endblock %}
+{% block body %}
+<div class="stack">
+{{ assurance(a, p, compact=True) }}
+<div class="spread"><div><h2>Supplier comparison</h2><p class="muted small" style="margin:2px 0 0">{{ comp.note }}</p></div>{{ headline(a) }}</div>
+
+{% if not comp.suppliers %}
+<div class="card"><div class="empty">{{ icon('columns') }}<h3>No processed {{ p.currency }} quotes yet</h3><p>Upload documents on the <a href="/p/{{ p.id }}/documents">Documents</a> tab. Results appear once at least one quote in {{ p.currency }} is processed.</p></div></div>
+{% else %}
+<div class="card flush">
+  <div class="card-head"><h3>{{ icon('scale') }}Confirmed like-for-like items</h3>
+    <div class="legend"><span><span class="tag quoted">{{ icon('quote') }}Quoted</span></span><span><span class="tag calc">{{ icon('calc') }}Calculated</span></span><span><span class="tag est">{{ icon('pencil') }}Estimated</span></span><span><span class="tag unk">{{ icon('help') }}Unknown</span></span></div></div>
+  <div class="table-wrap">
+  <table class="fixed-first">
+  <thead><tr><th>Item group</th>{% for s in comp.suppliers %}<th class="right"><a href="/p/{{ p.id }}/doc/{{ s.doc_id }}">{{ s.supplier }}</a></th>{% endfor %}<th>Equivalence · Layer 3</th></tr></thead>
+  <tbody>
+  {% for r in comp.rows %}
+  <tr><td class="strong">{{ r.label }}</td>
+    {% for s in comp.suppliers %}{% set c = r.cells[s.doc_id] %}
+    <td class="num">{% if c.status == 'not_offered' %}<span class="tag unk">Not offered</span>{% else %}{{ amount(c, p.currency) }}<div class="labels">{{ label(c) }}</div>{% endif %}</td>
+    {% endfor %}
+    <td class="small"><span class="chip ok">{{ icon('user-check') }}Confirmed by {{ r.equivalence.by }}</span></td></tr>
+  {% else %}
+  <tr><td colspan="{{ comp.suppliers|length + 2 }}"><div class="callout warn" style="margin:4px 0">{{ icon('scale') }}<div><h4>No equivalence confirmed yet</h4><p>Only items a person confirms as like-for-like are compared. Confirm AI proposals or pair items on the <a href="/p/{{ p.id }}/review#matches">review page</a>.</p></div></div></td></tr>
+  {% endfor %}
+  {% if comp.charges %}<tr class="sep"><td colspan="{{ comp.suppliers|length + 2 }}">Charges</td></tr>{% endif %}
+  {% for cr in comp.charges %}
+  <tr><td><i>{{ cr.kind|capitalize }}</i></td>
+    {% for s in comp.suppliers %}{% set c = cr.cells[s.doc_id] %}
+    <td class="num">{{ amount(c, p.currency) }}<div class="labels">{{ label(c) }}</div>{% if c.reason %}<div class="small muted">{{ c.reason }}</div>{% endif %}</td>
+    {% endfor %}<td></td></tr>
+  {% endfor %}
+  <tr class="total"><td>Total of known amounts</td>
+    {% for s in comp.suppliers %}{% set t = comp.totals[s.doc_id] %}
+    <td class="num">{{ CURRENCY_SYMBOL.get(p.currency,'') }}{{ t.known_total|money }}
+      <div class="labels"><span class="tag calc">{{ icon('calc') }}{{ t.label }}</span>{% if not t.complete %}<span class="tag unk">+ unknowns</span>{% endif %}</div>
+      {% if t.unknown_components %}<div class="small muted" style="font-weight:400">{{ t.unknown_components|join('; ') }}</div>{% endif %}</td>
+    {% endfor %}<td class="small muted" style="font-weight:400">Unknown amounts are never counted as zero.</td></tr>
+  <tr><td>Arithmetic (Layer 2)</td>{% for s in comp.suppliers %}<td class="right">{{ check_badge(docs[s.doc_id].l2.status) }}</td>{% endfor %}<td></td></tr>
+  </tbody>
+  </table>
+  </div>
+</div>
+
+<div class="card flush">
+  <div class="card-head"><h3>{{ icon('clock') }}Not compared yet</h3><span class="small muted">Items without a confirmed like-for-like group</span></div>
+  <div class="table-wrap"><table class="stack-mobile">
+  <thead><tr><th>Supplier</th><th>Item</th><th class="num">Line total</th><th>Equivalence</th></tr></thead>
+  <tbody>
+  {% for x in comp.not_compared_yet %}
+  <tr><td data-l="Supplier">{{ (comp.suppliers|selectattr('doc_id','equalto',x.doc_id)|first).supplier }}</td><td data-l="Item">{{ x.description }}</td>
+  <td data-l="Line total" class="num">{{ amount(x.line_total, p.currency) }} {{ label(x.line_total) }}</td>
+  <td data-l="Equivalence"><span class="chip {{ 'warn' if x.group_id else 'neutral' }}">{{ x.equivalence }}</span></td></tr>
+  {% else %}<tr><td colspan="4" class="muted">Every item is in a confirmed group.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endif %}
+
+{% if comp.not_comparable_currency %}
+<div class="card flush">
+  <div class="card-head"><h3>{{ icon('columns') }}Not comparable: different currency</h3></div>
+  <div class="table-wrap"><table><thead><tr><th>Supplier</th><th>Currency</th></tr></thead><tbody>
+  {% for x in comp.not_comparable_currency %}<tr><td><a href="/p/{{ p.id }}/doc/{{ x.doc_id }}">{{ x.supplier }}</a></td><td><span class="cur">{{ x.currency }}</span></td></tr>{% endfor %}
+  </tbody></table></div>
+  <div class="card-body small muted">These quotes are shown separately and never added to {{ p.currency }} totals or converted.</div>
+</div>
+{% endif %}
+
+<p class="small muted"><span class="tag quoted">Quoted</span> stated in the document and source-verified ·
+<span class="tag calc">Calculated</span> computed by our Decimal engine from verified values ·
+<span class="tag est">Estimated</span> entered by a reviewer, not in the document ·
+<span class="tag unk">Unknown</span> missing or unverified, never treated as zero</p>
+</div>
+{% endblock %}

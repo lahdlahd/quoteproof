@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}New comparison — QuoteProof{% endblock %}
+{% block body %}
+<div class="page-head"><div><h1>New comparison</h1><p class="sub">Two steps: name the comparison and choose its currency, then upload two or more supplier quotes.</p></div></div>
+<div class="grid g-main">
+  <form class="card stack" method="post" action="/projects">
+    <div class="row" style="gap:10px"><span class="chip info">Step 1 of 2</span><span class="muted small">Then: upload quotes</span></div>
+    <label class="field">Comparison name
+      <input name="name" placeholder="e.g. Office fit-out, Lagos HQ" maxlength="120" required autofocus>
+      <span class="help">Shown to anyone you share the link with.</span>
+    </label>
+    <fieldset style="border:0;padding:0;margin:0">
+      <legend class="field" style="font-weight:600;font-size:13px;margin-bottom:6px">Currency for this comparison</legend>
+      <div class="seg">
+        <label><input type="radio" name="currency" value="NGN" checked><span><b>NGN (₦)</b><br><span class="help">Nigerian naira</span></span></label>
+        <label><input type="radio" name="currency" value="USD"><span><b>USD ($)</b><br><span class="help">US dollar</span></span></label>
+      </div>
+      <p class="help" style="margin-top:8px">One currency per comparison. Quotes in another currency are shown separately and are never converted.</p>
+    </fieldset>
+    <div class="btn-row"><button type="submit">Create comparison {{ icon('arrow', 'sm') }}</button></div>
+  </form>
+  <div class="stack">
+    <div class="card">
+      <h3 style="margin-bottom:8px">What you can upload</h3>
+      <ul class="small" style="margin:0;padding-left:18px">
+        <li>CSV, XLSX or digital (text-based) PDF quotations</li>
+        <li>Up to {{ max_docs }} documents, {{ max_mb }} MB each</li>
+        <li>Not supported: scanned PDFs and macro workbooks</li>
+      </ul>
+    </div>
+    <div class="callout info">{{ icon('lock') }}<div><h4>Private by link</h4><p>No login. Keep the comparison's link private; it is deleted automatically after 24 hours.</p></div></div>
+  </div>
+</div>
+{% endblock %}

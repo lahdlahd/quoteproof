@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, label, amount, source_badge, check_badge, status_chip %}
+{% import "_workspace.html" as ws %}
+{% block title %}{{ d.original_name }} — QuoteProof{% endblock %}
+{% block workspace %}{{ ws.header(p, a, tab, open_findings, security_open, all_docs) }}{% endblock %}
+{% block body %}
+<div class="crumbs"><a href="/p/{{ p.id }}/documents">Documents</a><span class="sep">/</span><span>{{ d.original_name }}</span></div>
+<div class="page-head" style="margin-bottom:16px">
+  <div>
+    <h2 style="font-size:24px;line-height:32px">{{ d.supplier or d.original_name }}</h2>
+    <div class="ws-meta">
+      <span>{{ icon('file', 'sm') }}{{ d.original_name }}</span><span class="ref">{{ d.declared_type|upper }}</span>
+      <span>{{ d.size }} bytes</span><span>SHA-256 <code>{{ d.sha256[:16] }}…</code></span>
+      {{ status_chip(d.status) }}
+      {% if d.doc_currency %}<span class="cur">{{ d.doc_currency }}</span>{% endif %}
+      {% if d.comparable == 0 %}<span class="chip neutral">Not comparable: different currency</span>{% endif %}
+    </div>
+  </div>
+</div>
+
+{% set sec = findings|selectattr('code','in',SECURITY_CODES)|list %}
+{% if sec %}<div class="callout bad" style="margin-bottom:16px">{{ icon('shield-alert') }}<div><h4>Possible prompt injection in this document</h4><p>{{ sec|length }} security finding{{ 's' if sec|length != 1 }} at {{ sec|map(attribute='ref')|select|unique|join(', ') }}. The text was treated as data only and the extractor ran in the sandbox.</p></div><a class="btn sm act" href="/p/{{ p.id }}/review#findings">Review</a></div>{% endif %}
+
+<nav class="sec-nav noprint" aria-label="On this page">
+  {% if r %}<a href="#items">Line items</a><a href="#charges">Charges</a><a href="#totals">Totals</a>{% if r.l1.unaccounted %}<a href="#unaccounted">Unaccounted amounts</a>{% endif %}{% endif %}
+  <a href="#findings">Findings ({{ findings|length }})</a>{% if ex %}<a href="#code">AI-written extractor</a>{% endif %}<a href="#runs">Sandbox runs</a>
+</nav>
+
+<div class="stack" style="margin-top:16px">
+{% if r %}
+{% set l1 = r.l1 %}{% set l2 = r.l2 %}
+<div class="card flush anchor" id="items">
+  <div class="card-head"><h3>{{ icon('columns') }}Line items</h3><div class="legend"><span><span class="tag quoted">Quoted</span></span><span><span class="tag calc">Calculated</span></span><span><span class="tag est">Estimated</span></span><span><span class="tag unk">Unknown</span></span></div></div>
+  <div class="table-wrap">
+  <table>
+  <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Line total</th><th>Layer 1 · Source verification</th><th>Layer 2 · Arithmetic</th></tr></thead>
+  <tbody>
+  {% for ln in l2.lines %}
+  {% set base = 'line_items.' ~ ln.id %}
+  {% set chk = (l2.checks|selectattr('check','equalto','line')|selectattr('id','equalto',ln.id)|list|first) %}
+  <tr>
+    <td style="min-width:200px"><span class="strong">{{ ln.description }}</span>{{ source_badge(l1['values'].get(base ~ '.description')) }}</td>
+    <td class="num">{{ ln.qty.value if ln.qty.value is not none else '—' }}</td>
+    <td class="num">{{ amount(ln.unit_price, d.doc_currency) }}<div class="labels">{{ label(ln.unit_price) }}</div></td>
+    <td class="num">{{ amount(ln.line_total, d.doc_currency) }}<div class="labels">{{ label(ln.line_total) }}</div></td>
+    <td style="min-width:260px">{{ source_badge(l1['values'].get(base ~ '.qty'), 'qty') }}{{ source_badge(l1['values'].get(base ~ '.unit_price'), 'price') }}{{ source_badge(l1['values'].get(base ~ '.line_total'), 'total') }}</td>
+    <td>{{ check_badge(chk.status if chk else 'NOT_CHECKED') }}{% if chk and chk.status == 'FAILS' %}<div class="small" style="margin-top:4px">expected {{ chk.expected|money }}, stated {{ chk.stated|money }}</div>{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+  </div>
+</div>
+
+<div class="card flush anchor" id="charges">
+  <div class="card-head"><h3>{{ icon('calc') }}Charges</h3></div>
+  <div class="table-wrap">
+  <table>
+  <thead><tr><th>Charge</th><th>Kind</th><th class="num">Amount</th><th>Layer 1 · Source verification</th></tr></thead>
+  <tbody>
+  {% for ch in l2.charges %}
+  <tr><td class="strong">{{ ch.description }}{% if ch.rate %} <span class="muted">({{ ch.rate }}%)</span>{% endif %}</td><td>{{ ch.kind }}</td>
+  <td class="num">{{ amount(ch.amount, d.doc_currency) }}<div class="labels">{{ label(ch.amount) }}</div></td>
+  <td>{{ source_badge(l1['values'].get('charges.' ~ ch.id ~ '.amount')) }}</td></tr>
+  {% else %}<tr><td colspan="4" class="muted">No charges stated in this quote.</td></tr>{% endfor %}
+  </tbody>
+  </table>
+  </div>
+</div>
+
+<div class="grid g2 anchor" id="totals">
+<div class="card">
+  <h3 style="margin-bottom:12px">Totals</h3>
+  {% for k, title in [('items_subtotal','Sum of line items'),('stated_subtotal','Stated subtotal'),('tax','Tax'),('grand_total_stated','Stated grand total'),('grand_total_calculated','Grand total (our calculation)')] %}
+  <div class="spread" style="padding:8px 0;border-bottom:1px solid var(--line)"><span>{{ title }}</span><span class="num">{{ amount(l2.totals[k], d.doc_currency) }} {{ label(l2.totals[k]) }}</span></div>
+  {% endfor %}
+</div>
+<div class="card anchor" id="arithmetic">
+  <div class="spread" style="margin-bottom:10px"><h3>Layer 2 · Reconciliation</h3>{{ check_badge(l2.status) }}</div>
+  <div class="stack-sm">
+  {% for c in l2.checks if c.check != 'line' %}
+  <div class="spread small"><span>{{ c.check }}{% if c.base %} <span class="muted">({{ c.base }})</span>{% endif %}</span>{{ check_badge(c.status) }}</div>
+  {% if c.status == 'FAILS' %}<div class="small" style="color:var(--bad)">expected {{ c.expected|money }}, stated {{ c.stated|money }}, difference {{ c.difference|money }}</div>{% endif %}
+  {% if c.reason %}<div class="small muted">{{ c.reason }}</div>{% endif %}
+  {% endfor %}
+  </div>
+  <div class="divider" style="margin:14px 0"></div>
+  <h4 style="margin-bottom:6px">AI arithmetic cross-check</h4>
+  {% for k, v in l2.ai_cross_check.items() %}<div class="spread small" style="padding:3px 0"><span>{{ k }}</span><span><span class="chip {{ 'ok' if v.status == 'AGREES' else ('bad' if v.status == 'DISAGREES' else 'neutral') }}">{{ v.status }}</span>
+    {% if v.ai_value %} AI said {{ v.ai_value }}{% endif %}{% if v.trusted_value %}, trusted engine {{ v.trusted_value|money }}{% endif %}</span></div>{% endfor %}
+  <p class="small muted" style="margin-top:8px">The AI's own arithmetic is shown for comparison only; it is never used.</p>
+</div>
+</div>
+
+{% if l1.unaccounted %}
+<div class="card flush anchor" id="unaccounted">
+  <div class="card-head"><h3>{{ icon('alert') }}Unaccounted amounts</h3><span class="small muted">Money-like values in the document that the extractor did not account for</span></div>
+  <div class="table-wrap"><table>
+  <thead><tr><th>Location</th><th>Value</th><th>Context in the document</th></tr></thead>
+  <tbody>{% for u in l1.unaccounted %}<tr><td><span class="ref">{{ u.ref }}</span>{% if u.hidden %} <span class="chip warn">hidden</span>{% endif %}</td><td class="num">{{ u.raw }}</td><td class="small" style="overflow-wrap:anywhere">{{ u.context }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endif %}
+{% else %}
+<div class="card"><div class="empty">{{ icon('clock') }}<h3>No extraction results</h3><p>This document has status “{{ d.status }}”. Results appear here once it is processed; see the Overview timeline for each step.</p></div></div>
+{% endif %}
+
+<div class="card flush anchor" id="findings">
+  <div class="card-head"><h3>{{ icon('inbox') }}Findings for this document</h3><a class="small" href="/p/{{ p.id }}/review#findings">Decide in Human Review</a></div>
+  <div class="table-wrap"><table class="stack-mobile">
+  <thead><tr><th>Layer</th><th>Finding</th><th>Where</th><th>Detail</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for f in findings %}<tr><td data-l="Layer">{{ f.layer }}</td><td data-l="Finding"><span class="chip {{ 'bad' if f.code in SECURITY_CODES or f.severity == 'block' else ('neutral' if f.severity == 'info' else 'warn') }}">{{ f.code }}</span></td>
+  <td data-l="Where">{% if f.ref or f.path %}<span class="ref">{{ f.ref or f.path }}</span>{% endif %}</td><td data-l="Detail" class="small" style="overflow-wrap:anywhere">{{ f.detail }}</td><td data-l="Status">{{ status_chip(f.status) if f.status != 'open' else '' }}{% if f.status == 'open' %}<span class="chip warn">open</span>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="5" class="muted">None.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+
+{% if ex %}
+<div class="card anchor" id="code">
+  <div class="spread" style="margin-bottom:12px"><h3 class="row" style="gap:8px">{{ icon('code') }}AI-written extractor <span class="chip info">ran only in the sandbox</span></h3>
+  <span class="small muted">Model <code>{{ ex.model }}</code> · {{ ex.attempts }} attempt(s) · SHA-256 <code>{{ (ex.code_sha256 or '')[:16] }}…</code></span></div>
+  <pre class="code">{{ ex.code or '(no code)' }}</pre>
+</div>
+{% endif %}
+
+<div class="card flush anchor" id="runs">
+  <div class="card-head"><h3>{{ icon('box') }}Sandbox runs</h3><span class="small muted">Reported by the sandbox supervisor from Docker</span></div>
+  <div class="table-wrap"><table>
+  <thead><tr><th>Kind</th><th>Status</th><th>Runtime</th><th>Container</th><th class="num">Exit</th><th class="num">Duration</th><th>Removed</th></tr></thead>
+  <tbody>
+  {% for r in runs %}<tr><td class="strong">{{ r.kind }}</td><td>{{ r.envelope.status }}</td><td>{% if r.envelope.runtime == 'runsc' %}<span class="chip info">gVisor (runsc)</span>{% else %}{{ r.envelope.runtime }}{% endif %}</td><td><span class="ref">{{ (r.envelope.container_id or '')[:12] }}</span></td>
+  <td class="num">{{ r.envelope.exit_code }}</td><td class="num">{{ (r.envelope.duration_ms ~ ' ms') if r.envelope.duration_ms is not none else '—' }}</td><td>{{ '✓' if r.envelope.removed else '?' }}</td></tr>
+  {% else %}<tr><td colspan="7" class="muted">No sandbox runs recorded.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{"schema": "qp.extraction.v1",
+ "supplier": {"value_str": "Bello Builders Ltd", "cite": "p1:L1"},
+ "currency": "NGN",
+ "line_items": [
+  {"id": "L1", "description": {"value_str": "Cement 50kg bag", "cite": "p1:L3"},
+   "qty": {"value_str": "200", "cite": "p1:L3"}, "unit_price": {"value_str": "9500.00", "cite": "p1:L3"},
+   "line_total": {"value_str": "1900000.00", "cite": "p1:L3"}},
+  {"id": "L2", "description": {"value_str": "Sand (tonnes)", "cite": "p1:L4"},
+   "qty": {"value_str": "30", "cite": "p1:L4"}, "unit_price": {"value_str": "18000.00", "cite": "p1:L4"},
+   "line_total": {"value_str": "540000.00", "cite": "p1:L4"}}],
+ "charges": [
+  {"id": "C1", "kind": "delivery", "description": {"value_str": "Transport", "cite": "p1:L5"},
+   "amount": {"value_str": "60000.00", "cite": "p1:L5"}}],
+ "stated": {"subtotal": null, "tax": null, "grand_total": {"value_str": "2500000.00", "cite": "p1:L6"}}}

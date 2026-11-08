@@ -1,0 +1,18 @@
+{"schema": "qp.extraction.v1",
+ "supplier": {"value_str": "Adeyemi Office Supplies Ltd", "cite": "R1C2"},
+ "currency": "NGN",
+ "line_items": [
+  {"id": "L1", "description": {"value_str": "Office chair (mesh)", "cite": "R4C1"},
+   "qty": {"value_str": "10", "cite": "R4C2"}, "unit_price": {"value_str": "85000.00", "cite": "R4C3"},
+   "line_total": {"value_str": "850000.00", "cite": "R4C4"}},
+  {"id": "L2", "description": {"value_str": "Desk 1.4m", "cite": "R5C1"},
+   "qty": {"value_str": "5", "cite": "R5C2"}, "unit_price": {"value_str": "120000.00", "cite": "R5C3"},
+   "line_total": {"value_str": "600000.00", "cite": "R5C4"}}],
+ "charges": [
+  {"id": "C1", "kind": "delivery", "description": {"value_str": "Delivery", "cite": "R6C1"},
+   "amount": {"value_str": "25000.00", "cite": "R6C4"}, "rate": null},
+  {"id": "C2", "kind": "tax", "description": {"value_str": "VAT 7.5%", "cite": "R7C1"},
+   "amount": {"value_str": "110625.00", "cite": "R7C4"}, "rate": {"value_str": "7.5%", "cite": "R7C1"}}],
+ "stated": {"subtotal": null, "tax": {"value_str": "110625.00", "cite": "R7C4"},
+            "grand_total": {"value_str": "1585625.00", "cite": "R8C4"}},
+ "ai_arithmetic": {"subtotal": "1450000.00", "grand_total": "1585625.00"}}

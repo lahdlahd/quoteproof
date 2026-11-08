@@ -1,0 +1,172 @@
+{
+ "schema": "qp.source_index.v1",
+ "source_sha256": "4d263d9e7a0a5ad5f1c986a58138e9a5ca820e89483676920962732500dc0a92",
+ "source_bytes": 7971,
+ "declared_type": "xlsx",
+ "detected_type": "xlsx",
+ "ok": true,
+ "error": null,
+ "truncated": false,
+ "warnings": [
+  {
+   "code": "EXTERNAL_LINKS",
+   "detail": "1 external workbook link(s)",
+   "ref": null
+  },
+  {
+   "code": "FORMULA_ERROR",
+   "detail": "cell shows error #DIV/0!",
+   "ref": "Errors!B3"
+  },
+  {
+   "code": "FORMULA_ERROR",
+   "detail": "cell shows error #N/A",
+   "ref": "Errors!B4"
+  },
+  {
+   "code": "EXTERNAL_REFERENCE",
+   "detail": "formula refers to another workbook",
+   "ref": "Errors!B4"
+  },
+  {
+   "code": "HIDDEN_CONTENT",
+   "detail": "non-empty cell in a hidden sheet, row or column",
+   "ref": "Hidden!A1"
+  },
+  {
+   "code": "HIDDEN_CONTENT",
+   "detail": "non-empty cell in a hidden sheet, row or column",
+   "ref": "Hidden!B1"
+  }
+ ],
+ "workbook": {
+  "sheets": [
+   {
+    "name": "Errors",
+    "state": "visible",
+    "max_row": 4,
+    "max_col": 2
+   },
+   {
+    "name": "Hidden",
+    "state": "hidden",
+    "max_row": 1,
+    "max_col": 2
+   }
+  ],
+  "recalc_on_load": false,
+  "external_link_count": 1
+ },
+ "cells": [
+  {
+   "ref": "Errors!A1",
+   "sheet": "Errors",
+   "row": 1,
+   "col": 1,
+   "formula": null,
+   "value": "Value",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Errors!B1",
+   "sheet": "Errors",
+   "row": 1,
+   "col": 2,
+   "formula": null,
+   "value": "10",
+   "value_type": "n",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Errors!A2",
+   "sheet": "Errors",
+   "row": 2,
+   "col": 1,
+   "formula": null,
+   "value": "Zero",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Errors!B2",
+   "sheet": "Errors",
+   "row": 2,
+   "col": 2,
+   "formula": null,
+   "value": "0",
+   "value_type": "n",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Errors!A3",
+   "sheet": "Errors",
+   "row": 3,
+   "col": 1,
+   "formula": null,
+   "value": "Divide",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Errors!B3",
+   "sheet": "Errors",
+   "row": 3,
+   "col": 2,
+   "formula": "=B1/B2",
+   "value": "#DIV/0!",
+   "value_type": "e",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Errors!A4",
+   "sheet": "Errors",
+   "row": 4,
+   "col": 1,
+   "formula": null,
+   "value": "External",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Errors!B4",
+   "sheet": "Errors",
+   "row": 4,
+   "col": 2,
+   "formula": "=[1]Sheet1!A1",
+   "value": "#N/A",
+   "value_type": "e",
+   "number_format": "General",
+   "hidden": false
+  },
+  {
+   "ref": "Hidden!A1",
+   "sheet": "Hidden",
+   "row": 1,
+   "col": 1,
+   "formula": null,
+   "value": "Service fee",
+   "value_type": "s",
+   "number_format": "General",
+   "hidden": true
+  },
+  {
+   "ref": "Hidden!B1",
+   "sheet": "Hidden",
+   "row": 1,
+   "col": 2,
+   "formula": null,
+   "value": "300",
+   "value_type": "n",
+   "number_format": "General",
+   "hidden": true
+  }
+ ]
+}

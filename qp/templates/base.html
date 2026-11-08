@@ -1,0 +1,49 @@
+{% from "_macros.html" import icon %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}QuoteProof{% endblock %}</title>
+<link rel="preload" href="/static/fonts/Inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/app.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body{% block bodyattr %}{% endblock %}>
+{% include "_icons.html" %}
+<a class="skip" href="#main">Skip to content</a>
+{% block page %}
+<div class="shell">
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <a class="brand" href="/app"><span class="brand-mark"><svg aria-hidden="true"><use href="#i-brand"/></svg></span>QuoteProof</a>
+    {% set nav = nav|default('comparisons' if p is defined else '') %}
+    <nav class="nav">
+      <a href="/app" {{ 'aria-current="page"'|safe if nav == 'dashboard' }}>{{ icon('grid') }}Dashboard</a>
+      <a href="/new" {{ 'aria-current="page"'|safe if nav == 'new' }}>{{ icon('plus') }}New Comparison</a>
+      <a href="/comparisons" {{ 'aria-current="page"'|safe if nav == 'comparisons' }}>{{ icon('folder') }}My Comparisons</a>
+      <a href="/review-queue" {{ 'aria-current="page"'|safe if nav == 'queue' }}>{{ icon('inbox') }}Review Queue<span class="count" id="nav-queue-count" hidden></span></a>
+      <a href="/containment" {{ 'aria-current="page"'|safe if nav == 'containment' }}>{{ icon('shield') }}Containment &amp; Security</a>
+    </nav>
+    <div class="sidebar-foot">
+      {% if selftest_latest %}
+      <a class="status" href="/containment" style="color:#fff"><span class="dot {{ 'ok' if selftest_latest.passed else 'bad' }}"></span>{{ 'Containment tests passed' if selftest_latest.passed else 'Containment self-test failed' }}</a>
+      <div class="muted">{{ 'gVisor (runsc) + hardened Docker' if selftest_latest.report.isolation_mode == 'gvisor' else 'Docker (runc) + hardening' }} · {{ selftest_latest.created_at|ts }}</div>
+      {% else %}<div class="status"><span class="dot"></span>No self-test yet</div>{% endif %}
+      <div class="muted" style="margin-top:10px">No login. Comparisons are private to their link and deleted after 24 h.</div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="main">
+    <header class="topbar">
+      <button type="button" id="nav-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">{{ icon('menu', 'lg') }}</button>
+      <a class="brand" href="/app" style="color:#fff"><span class="brand-mark"><svg aria-hidden="true"><use href="#i-brand"/></svg></span>QuoteProof</a>
+      {% if selftest_latest %}<span class="dot {{ 'ok' if selftest_latest.passed else 'bad' }}" title="Containment self-test"></span>{% endif %}
+    </header>
+    {% block workspace %}{% endblock %}
+    <main id="main" class="content" tabindex="-1">{% block body %}{% endblock %}</main>
+    <footer class="foot">{{ icon('lock', 'sm') }}AI-written extractors run only inside a no-network, read-only, non-root sandbox. Every number is checked by trusted code.</footer>
+  </div>
+</div>
+{% endblock %}
+{% if p is defined and p %}<script type="application/json" id="qp-cmp">{{ {"id": p.id, "name": p.name, "currency": p.currency, "expires_at": p.expires_at}|tojson }}</script>{% endif %}
+</body>
+</html>

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_chip %}
+{% import "_workspace.html" as ws %}
+{% block title %}Documents — {{ p.name }}{% endblock %}
+{% block workspace %}{{ ws.header(p, a, tab, open_findings, security_open, all_docs) }}{% endblock %}
+{% block body %}
+<div class="grid g-main">
+  <div class="card flush">
+    <div class="card-head"><h3>{{ icon('file') }}Supplier quotes</h3><span class="small muted">{{ docs|length }} uploaded</span></div>
+    {% if docs %}
+    <div class="table-wrap">
+    <table class="stack-mobile">
+      <thead><tr><th>Document</th><th>Type</th><th>Currency</th><th>Status</th><th class="num">Open items</th><th></th></tr></thead>
+      <tbody>
+      {% for d in docs %}
+      <tr>
+        <td data-l="Document"><a class="strong" href="/p/{{ p.id }}/doc/{{ d.id }}">{{ d.supplier or d.original_name }}</a><div class="small muted">{{ d.original_name }} · {{ d.size }} bytes</div></td>
+        <td data-l="Type"><span class="ref">{{ d.declared_type|upper }}</span></td>
+        <td data-l="Currency">{% if d.doc_currency %}<span class="cur">{{ d.doc_currency }}</span>{% else %}<span class="muted small">declared {{ d.user_currency }}</span>{% endif %}
+          {% if d.comparable == 0 %}<div style="margin-top:4px"><span class="chip neutral">Not comparable: different currency</span></div>{% endif %}</td>
+        <td data-l="Status">{{ status_chip(d.status) }}</td>
+        <td data-l="Open review items" class="num">{% if per_doc[d.id] %}<span class="chip warn">{{ per_doc[d.id] }}</span>{% else %}<span class="muted">0</span>{% endif %}</td>
+        <td><a class="btn secondary sm" href="/p/{{ p.id }}/doc/{{ d.id }}">Open {{ icon('arrow', 'sm') }}</a></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="empty">{{ icon('file') }}<h3>No documents yet</h3><p>Upload two or more supplier quotes in {{ p.currency }} to start comparing.</p></div>
+    {% endif %}
+  </div>
+  <div class="card"><h3 style="margin-bottom:12px">Upload a supplier quote</h3>{% include "_upload.html" %}</div>
+</div>
+{% endblock %}

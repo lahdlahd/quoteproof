@@ -1,0 +1,44 @@
+[Unit]
+Description=QuoteProof worker (job queue, Vultr inference, trusted verification)
+After=network-online.target qp-sandboxd.service
+Wants=network-online.target qp-sandboxd.service
+
+[Service]
+Type=simple
+User=qp-worker
+Group=qp-worker
+# qp-sock: may call the supervisor socket. qp-db: shared SQLite database. NOT docker, NOT qp-files.
+SupplementaryGroups=qp-sock qp-db
+ExecStart=/usr/bin/python3 -I -B /opt/qp/app/run_worker.py --config /etc/qp-worker/worker.json
+Restart=on-failure
+RestartSec=3
+# The inference key: a systemd credential, readable by this service only (never an env variable).
+LoadCredential=inference_key:/etc/qp-secrets/inference_key
+UMask=0007
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ReadWritePaths=/srv/qp/db /srv/qp/indexes
+# Belt and braces on top of file permissions: the worker can never see raw uploads or Docker.
+InaccessiblePaths=-/srv/qp/uploads -/var/run/docker.sock -/run/docker.sock -/run/containerd
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+# Needs HTTPS out to api.vultrinference.com and the supervisor's unix socket.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

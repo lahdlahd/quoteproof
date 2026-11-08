@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_chip %}
+{% import "_workspace.html" as ws %}
+{% block title %}Human review — {{ p.name }}{% endblock %}
+{% block workspace %}{{ ws.header(p, a, tab, open_findings, security_open, all_docs) }}{% endblock %}
+{% block body %}
+<div class="stack">
+<div>
+  <h2>Human review <span class="muted" style="font-weight:500">· Layer 3</span></h2>
+  <p class="muted" style="margin:4px 0 0;max-width:820px">Every decision needs a reason and is recorded with your name (self-declared), the time, and the before and after values.
+  A correction must cite a location in the document, or be marked user-entered, in which case it is labelled <span class="tag est">{{ icon('pencil') }}Estimated</span>. Layers 1–2 then re-run automatically.</p>
+</div>
+
+<div class="reviewer-bar">
+  <label class="field" style="flex-direction:row;align-items:center;gap:10px;margin:0">{{ icon('user-check') }}Your name (self-declared)
+    <input form="none" id="rv" value="{{ reviewer }}" maxlength="60" placeholder="e.g. Ada Okafor" style="width:220px"></label>
+  <span class="small muted">Applied to every decision on this page.</span>
+  <span id="rv-warn" class="chip warn" hidden>{{ icon('alert') }}Enter your name first</span>
+</div>
+
+{# ---------------- equivalence ---------------- #}
+{% set proposed = groups|selectattr('status','equalto','proposed')|list %}
+<div class="anchor" id="matches">
+  <div class="section-title"><h2>{{ icon('scale') }} Item equivalence</h2><p>{{ groups|selectattr('status','equalto','confirmed')|list|length }} confirmed · {{ proposed|length }} proposed by AI</p></div>
+  <div class="stack-sm">
+  {% for g in groups %}
+  <div class="group">
+    <div class="spread">
+      <div class="row" style="gap:8px"><h3>{{ g.label }}</h3>
+      {% if g.status == 'proposed' %}<span class="chip warn">{{ icon('clock') }}Proposed by AI, not confirmed</span> <span class="chip neutral">confidence: {{ g.confidence }}</span>
+      {% elif g.status == 'confirmed' %}<span class="chip ok">{{ icon('check') }}Confirmed by {{ g.confirmed_by }}</span>
+      {% else %}<span class="chip bad">{{ icon('x') }}Rejected</span>{% endif %}</div>
+      <span class="small muted">{{ 'AI (' ~ g.model ~ ')' if g.source == 'ai' else 'paired by a reviewer' }}</span>
+    </div>
+    <div class="members">{% for m in g.members %}{% set it = (items|selectattr('doc_id','equalto',m.doc_id)|selectattr('id','equalto',m.item_id)|first) %}
+      <div class="member"><div class="small muted">{{ it.supplier if it else m.doc_id }}</div><div class="strong">{{ it.description if it else m.item_id }}</div>
+      {% if it and it.total.value is not none %}<div class="small num" style="text-align:left">{{ CURRENCY_SYMBOL.get(p.currency,'') }}{{ it.total.value|money }}</div>{% endif %}</div>{% endfor %}</div>
+    {% if g.reason %}<p class="small"><i>Reason:</i> {{ g.reason }}</p>{% endif %}
+    <form class="inline rv" method="post" action="/p/{{ p.id }}/review/match/{{ g.id }}">
+      <input type="hidden" name="t" value="{{ token }}"><input type="hidden" name="reviewer">
+      <input name="reason" placeholder="Reason (required)" required size="34" aria-label="Reason for this decision">
+      {% if g.status != 'confirmed' %}<button name="action" value="confirm" class="teal">{{ icon('check', 'sm') }}Confirm equivalent</button>{% endif %}
+      {% if g.status != 'rejected' %}<button class="secondary" name="action" value="reject">Reject</button>{% endif %}
+      {% if g.status != 'proposed' %}<button class="secondary" name="action" value="reopen">Reopen</button>{% endif %}
+    </form>
+  </div>
+  {% else %}
+  <div class="callout info">{{ icon('info') }}<div><h4>No equivalence proposals yet</h4><p>AI matching runs automatically once two quotes in {{ p.currency }} are processed. You can also pair items manually below.</p></div></div>
+  {% endfor %}
+  </div>
+
+  <details class="card" style="margin-top:12px" {{ 'open' if not groups }}>
+    <summary class="strong" style="cursor:pointer">{{ icon('plus', 'sm') }} Pair items manually</summary>
+    <form method="post" action="/p/{{ p.id }}/review/pair" class="rv stack-sm" style="margin-top:12px">
+      <input type="hidden" name="t" value="{{ token }}"><input type="hidden" name="reviewer">
+      <div class="table-wrap"><table class="compact">
+      <thead><tr><th></th><th>Supplier</th><th>Item</th><th class="num">Line total</th></tr></thead>
+      <tbody>{% for it in items %}<tr><td><input type="checkbox" name="item" value="{{ it.doc_id }}|{{ it.id }}" aria-label="Select {{ it.description }}"></td><td>{{ it.supplier }}</td><td>{{ it.description }}</td><td class="num">{{ it.total.value|money if it.total.value is not none else 'Unknown' }}</td></tr>
+      {% else %}<tr><td colspan="4" class="muted">No processed items.</td></tr>{% endfor %}</tbody></table></div>
+      <div class="row"><input name="label" placeholder="Group label, e.g. Mesh office chair" required size="30" aria-label="Group label"> <input name="reason" placeholder="Why are these equivalent? (required)" required size="38" aria-label="Reason"></div>
+      <div><button>{{ icon('check', 'sm') }}Create confirmed group</button></div>
+    </form>
+  </details>
+</div>
+
+{# ---------------- findings ---------------- #}
+{% set open_f = findings|selectattr('status','equalto','open')|list %}
+{% set sec_open = open_f|selectattr('code','in',SECURITY_CODES)|list %}
+{% set other_open = open_f|rejectattr('code','in',SECURITY_CODES)|list %}
+{% set decided = findings|rejectattr('status','equalto','open')|list %}
+<div class="anchor" id="findings">
+  <div class="section-title"><h2>{{ icon('inbox') }} Findings</h2><p>{{ open_f|length }} open · {{ findings|length - open_f|length }} decided or resolved</p></div>
+  {% macro finding_card(f) %}
+  {% set d = docs.get(f.document_id) %}
+  <div class="finding{{ ' security' if f.code in SECURITY_CODES }}">
+    <div>
+      <div class="fh">
+        <span class="chip {{ 'bad' if f.code in SECURITY_CODES or f.severity == 'block' else ('neutral' if f.severity == 'info' else 'warn') }}">{{ icon('shield-alert' if f.code in SECURITY_CODES else 'alert') }}{{ f.code }}</span>
+        <span class="small muted">{{ f.layer }}</span>
+        {% if f.ref %}<span class="ref">{{ f.ref }}</span>{% endif %}{% if f.path %}<span class="small muted">{{ f.path }}</span>{% endif %}
+      </div>
+      <div class="small muted" style="margin-bottom:4px">{{ (d.supplier or d.original_name) if d else '—' }}{% if d %} · <a href="/p/{{ p.id }}/doc/{{ d.id }}">view document evidence</a>{% endif %}</div>
+      <div class="fd">{{ f.detail }}</div>
+    </div>
+    <div>
+      {% if f.status == 'open' %}
+      <form method="post" action="/p/{{ p.id }}/review/finding/{{ f.id }}" class="rv decide">
+        <input type="hidden" name="t" value="{{ token }}"><input type="hidden" name="reviewer">
+        <input name="reason" placeholder="Reason (required)" required aria-label="Reason for this decision">
+        <div class="btn-row">
+          <button name="action" value="accept" class="sm">Accept</button>
+          <button class="secondary sm" name="action" value="dismiss">Dismiss</button>
+        </div>
+        {% if f.code in ('LINE_WITHOUT_AMOUNTS', 'LINE_NOT_CHECKED') %}
+        <div><button class="secondary sm" name="action" value="exclude"
+          title="Removes this row from the comparison and re-runs Layers 1-2">Not a line item — exclude</button></div>
+        {% endif %}
+        {% if f.path and f.document_id and f.path.count('.') == 2 %}
+        <details><summary>Correct value</summary>
+          <div class="stack-sm">
+            <input name="value_str" placeholder="e.g. 25000.00" aria-label="Corrected value">
+            <input name="cite" placeholder="cite e.g. R6C4" aria-label="Location in the document">
+            <label class="small row" style="gap:6px"><input type="checkbox" name="user_entered" value="1"> user-entered (not in document) — labelled Estimated</label>
+            <button class="secondary sm" name="action" value="correct">Save correction</button>
+          </div>
+        </details>
+        {% endif %}
+      </form>
+      {% else %}
+      {{ status_chip(f.status) }}
+      {% endif %}
+    </div>
+  </div>
+  {% endmacro %}
+  <div class="card flush">
+    {% if sec_open %}<div class="card-head" style="background:#FFF8F7"><h3 style="color:var(--bad)">{{ icon('shield-alert') }}Security findings · {{ sec_open|length }} open</h3></div>{% for f in sec_open %}{{ finding_card(f) }}{% endfor %}{% endif %}
+    {% if other_open %}<div class="card-head"><h3>{{ icon('alert') }}Verification findings · {{ other_open|length }} open</h3></div>{% for f in other_open %}{{ finding_card(f) }}{% endfor %}{% endif %}
+    {% if decided %}<details><summary class="card-head" style="cursor:pointer"><h3>{{ icon('check') }}Decided or resolved · {{ decided|length }}</h3></summary>{% for f in decided %}{{ finding_card(f) }}{% endfor %}</details>{% endif %}
+    {% if not findings %}<div class="empty">{{ icon('check') }}<h3>No findings</h3><p>Nothing in this comparison needs a decision.</p></div>{% endif %}
+  </div>
+</div>
+
+<div>
+  <div class="section-title"><h2>{{ icon('clock') }} Review log</h2><p>Who decided, when, why, and the before and after values.</p></div>
+  <div class="card flush"><div class="table-wrap">
+  <table class="stack-mobile">
+  <thead><tr><th>When</th><th>Reviewer</th><th>Target</th><th>Action</th><th>Reason</th><th>Before → after</th></tr></thead>
+  <tbody>
+  {% for x in log %}<tr><td data-l="When" class="nowrap small">{{ x.at|ts }}</td><td data-l="Reviewer">{{ x.reviewer }} <span class="muted">(self-declared)</span></td><td data-l="Target">{{ x.target_type }}</td><td data-l="Action"><span class="chip info">{{ x.action }}</span></td><td data-l="Reason" class="small">{{ x.reason }}</td><td data-l="Before → after" class="small"><code style="overflow-wrap:anywhere">{{ x.before }}</code> → <code style="overflow-wrap:anywhere">{{ x.after }}</code></td></tr>
+  {% else %}<tr><td colspan="6" class="muted">No decisions yet.</td></tr>{% endfor %}
+  </tbody></table>
+  </div></div>
+</div>
+</div>
+{% endblock %}

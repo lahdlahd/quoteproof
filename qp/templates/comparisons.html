@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}My Comparisons — QuoteProof{% endblock %}
+{% block bodyattr %} data-page="comparisons"{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div><h1>My Comparisons</h1><p class="sub">Every comparison created or opened in this browser, with its three assurance layers and report status. Comparisons are deleted 24 hours after creation.</p></div>
+  <div class="btn-row"><a class="btn" href="/new">{{ icon('plus') }}New comparison</a></div>
+</div>
+<div class="card flush" style="margin-bottom:20px"><div id="list"><div class="empty"><p>Loading…</p></div></div></div>
+<div class="grid g2">
+  <div class="card">
+    <h3 style="margin-bottom:6px">Add a comparison by link</h3>
+    <form id="add-by-link" class="row" style="align-items:flex-end">
+      <label class="field" style="flex:1;min-width:220px">Comparison link<input name="link" placeholder="https://…/p/…" autocomplete="off"></label>
+      <button class="secondary" type="submit">{{ icon('link', 'sm') }}Add</button>
+    </form>
+    <p id="add-msg" class="small" role="status" style="margin-top:8px"></p>
+  </div>
+  <div class="callout info">{{ icon('info') }}<div><h4>Why only this browser?</h4><p>QuoteProof has no login. A comparison's link is its only key, so the server never lists comparisons. “Forget” removes one from this list; it does not delete the comparison.</p></div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+Supplier,Adeyemi Office Supplies Ltd
+Quote No,AOS-2026-114
+Item,Qty,Unit Price (NGN),Line Total (NGN)
+Office chair (mesh),10,"₦85,000.00","₦850,000.00"
+Desk 1.4m,5,"₦120,000.00","₦600,000.00"
+Delivery,,,"₦25,000.00"
+VAT 7.5%,,,"₦110,625.00"
+Grand Total,,,"₦1,585,625.00"
+Note,=SUM(D4:D5) is plain text in a CSV

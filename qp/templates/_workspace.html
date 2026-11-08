@@ -1,0 +1,30 @@
+{% from "_macros.html" import icon, assurance %}
+{% macro header(p, a, tab, open_findings, security_open, all_docs, show_strip=True) -%}
+<div class="ws-head">
+  <div class="inner">
+    <div class="crumbs"><a href="/comparisons">My Comparisons</a><span class="sep">/</span><span>{{ p.name }}</span></div>
+    <div class="spread">
+      <div>
+        <div class="ws-title"><h1>{{ p.name }}</h1><span class="cur" title="Comparison currency">{{ p.currency }}</span></div>
+        <div class="ws-meta">
+          <span>{{ icon('file', 'sm') }}{{ all_docs|length }} document{{ 's' if all_docs|length != 1 }}</span>
+          <span>{{ icon('clock', 'sm') }}Expires in {{ p.expires_at|expires_in }}</span>
+          <span>{{ icon('lock', 'sm') }}Private to this link</span>
+        </div>
+      </div>
+      <div class="btn-row noprint">
+        <a class="btn secondary sm" href="/p/{{ p.id }}/documents">{{ icon('upload', 'sm') }}Upload quote</a>
+        <a class="btn secondary sm" href="/p/{{ p.id }}/report">{{ icon('file-text', 'sm') }}Report</a>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Comparison sections">
+      <a href="/p/{{ p.id }}" {{ 'aria-current="page"'|safe if tab == 'overview' }}>{{ icon('grid', 'sm') }}Overview</a>
+      <a href="/p/{{ p.id }}/documents" {{ 'aria-current="page"'|safe if tab == 'documents' }}>{{ icon('file', 'sm') }}Documents</a>
+      <a href="/p/{{ p.id }}/verification" {{ 'aria-current="page"'|safe if tab == 'verification' }}>{{ icon('search', 'sm') }}Verification</a>
+      <a href="/p/{{ p.id }}/review" {{ 'aria-current="page"'|safe if tab == 'review' }}>{{ icon('user-check', 'sm') }}Human Review{% if open_findings %}<span class="count{{ ' bad' if security_open }}">{{ open_findings }}</span>{% endif %}</a>
+      <a href="/p/{{ p.id }}/compare" {{ 'aria-current="page"'|safe if tab == 'results' }}>{{ icon('columns', 'sm') }}Results</a>
+      <a href="/p/{{ p.id }}/report" {{ 'aria-current="page"'|safe if tab == 'report' }}>{{ icon('file-text', 'sm') }}Report</a>
+    </nav>
+  </div>
+</div>
+{%- endmacro %}

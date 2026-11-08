@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Dashboard — QuoteProof{% endblock %}
+{% block bodyattr %} data-page="dashboard"{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div><h1>Dashboard</h1><p class="sub">What is happening across the comparisons you have opened in this browser, and what needs a decision next.</p></div>
+  <div class="btn-row"><a class="btn" href="/new">{{ icon('plus') }}New comparison</a></div>
+</div>
+
+<div class="grid g4" style="margin-bottom:24px">
+  <div class="stat"><span class="k">{{ icon('folder', 'sm') }}Comparisons</span><span class="v" id="st-count">–</span><span class="d">in this browser</span></div>
+  <div class="stat" id="tile-open"><span class="k">{{ icon('inbox', 'sm') }}Open review items</span><span class="v" id="st-open">–</span><span class="d" id="st-sec">&nbsp;</span></div>
+  <div class="stat"><span class="k">{{ icon('file-text', 'sm') }}Reports complete</span><span class="v" id="st-reports">–</span><span class="d" id="st-drafts">&nbsp;</span></div>
+  <a class="stat" href="/containment" style="color:inherit;text-decoration:none">
+    <span class="k">{{ icon('shield', 'sm') }}Containment self-test</span>
+    {% if selftest %}
+    <span class="v" style="font-size:20px;display:flex;align-items:center;gap:8px"><span class="dot {{ 'ok' if selftest.passed else 'bad' }}"></span>{{ 'Passed' if selftest.passed else 'Failed' }}</span>
+    <span class="d">{{ 'gVisor (runsc)' if selftest.report.isolation_mode == 'gvisor' else 'Docker (runc)' }} · {{ selftest.created_at|ts }}</span>
+    {% else %}<span class="v" style="font-size:20px">Not run</span><span class="d">Open the panel to run it</span>{% endif %}
+  </a>
+</div>
+
+<div class="grid g-main">
+  <div class="stack">
+    <div class="card flush">
+      <div class="card-head"><h3>{{ icon('alert') }}Needs your attention</h3><a class="small" href="/review-queue">Review Queue {{ icon('arrow', 'sm') }}</a></div>
+      <div id="attention"><div class="empty"><p>Loading…</p></div></div>
+    </div>
+    <div class="card flush">
+      <div class="card-head"><h3>{{ icon('folder') }}Recent comparisons</h3><a class="small" href="/comparisons">All comparisons {{ icon('arrow', 'sm') }}</a></div>
+      <div id="recent"><div class="empty"><p>Loading…</p></div></div>
+    </div>
+  </div>
+  <div class="stack">
+    <div class="card">
+      <h3 style="margin-bottom:10px">What each comparison proves</h3>
+      <div class="stack-sm small">
+        <div style="display:grid;grid-template-columns:30px 1fr;gap:8px;align-items:start"><span class="chip ok">1</span><div><b>Source verification</b><br><span class="muted">Every amount matches the cell or line it cites.</span></div></div>
+        <div style="display:grid;grid-template-columns:30px 1fr;gap:8px;align-items:start"><span class="chip ok">2</span><div><b>Arithmetic reconciliation</b><br><span class="muted">Lines and totals recomputed with Decimal.</span></div></div>
+        <div style="display:grid;grid-template-columns:30px 1fr;gap:8px;align-items:start"><span class="chip warn">3</span><div><b>Human-confirmed equivalence</b><br><span class="muted">A person confirms like-for-like items.</span></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:6px">Add a comparison by link</h3>
+      <p class="small muted">Opened a comparison on another device? Paste its link to list it here.</p>
+      <form id="add-by-link" class="stack-sm">
+        <label class="field">Comparison link<input name="link" placeholder="https://…/p/…" autocomplete="off"></label>
+        <button class="secondary" type="submit">{{ icon('link', 'sm') }}Add to this browser</button>
+        <p id="add-msg" class="small" role="status"></p>
+      </form>
+    </div>
+    <p class="small muted">{{ icon('info', 'sm') }} There is no login, so this list lives only in this browser. Nothing is listed on the server.</p>
+  </div>
+</div>
+{% endblock %}

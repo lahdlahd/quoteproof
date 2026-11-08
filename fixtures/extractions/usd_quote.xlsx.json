@@ -1,0 +1,12 @@
+{"schema": "qp.extraction.v1",
+ "supplier": {"value_str": "Lakeside Equipment Inc.", "cite": "Quote!B1"},
+ "currency": "USD",
+ "line_items": [
+  {"id": "L1", "description": {"value_str": "Laptop 14in", "cite": "Quote!A4"},
+   "qty": {"value_str": "4", "cite": "Quote!B4"}, "unit_price": {"value_str": "899.50", "cite": "Quote!C4"},
+   "line_total": {"value_str": "3598.00", "cite": "Quote!D4"}},
+  {"id": "L2", "description": {"value_str": "Docking station", "cite": "Quote!A5"},
+   "qty": {"value_str": "4", "cite": "Quote!B5"}, "unit_price": {"value_str": "120.00", "cite": "Quote!C5"},
+   "line_total": {"value_str": "480.00", "cite": "Quote!D5"}}],
+ "charges": [],
+ "stated": {"subtotal": {"value_str": "4153.00", "cite": "Quote!D7"}, "tax": null, "grand_total": null}}

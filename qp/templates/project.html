@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, assurance, status_chip %}
+{% import "_workspace.html" as ws %}
+{% block title %}{{ p.name }} — QuoteProof{% endblock %}
+{% block workspace %}{{ ws.header(p, a, tab, open_findings, security_open, all_docs) }}{% endblock %}
+{% block body %}
+{% set processing = docs|selectattr('status','in',PROCESSING_STATUSES)|list %}
+{% set proposed = groups|selectattr('status','equalto','proposed')|list %}
+<div class="stack">
+  {# Next step: one clear action, derived from real state #}
+  {% if not docs %}
+    <div class="callout info">{{ icon('upload') }}<div><h4>Step 2: upload your supplier quotes</h4><p>Add two or more quotes in {{ p.currency }} to compare them. Each one is processed in the sandbox as soon as it arrives.</p></div></div>
+  {% elif processing %}
+    <div class="callout info">{{ icon('clock') }}<div><h4>Processing {{ processing|length }} document{{ 's' if processing|length != 1 }}</h4><p>Watch each step below. This page refreshes when processing finishes.</p></div></div>
+  {% elif security_open %}
+    <div class="callout bad">{{ icon('shield-alert') }}<div><h4>{{ security_open }} security finding{{ 's' if security_open != 1 }} need a decision</h4><p>Possible prompt injection was detected in an uploaded quote. Confirm or dismiss it with a reason.</p></div><a class="btn sm act" href="/p/{{ p.id }}/review#findings">Review now</a></div>
+  {% elif open_findings %}
+    <div class="callout warn">{{ icon('alert') }}<div><h4>{{ open_findings }} item{{ 's' if open_findings != 1 }} need review</h4><p>Verification found values or totals a person should check before the report can be complete.</p></div><a class="btn sm act" href="/p/{{ p.id }}/review#findings">Open Human Review</a></div>
+  {% elif proposed %}
+    <div class="callout warn">{{ icon('scale') }}<div><h4>Confirm {{ proposed|length }} AI match proposal{{ 's' if proposed|length != 1 }}</h4><p>The AI suggested which items are equivalent. Only a person can confirm.</p></div><a class="btn sm act" href="/p/{{ p.id }}/review#matches">Confirm matches</a></div>
+  {% elif a.headline == 'Complete' %}
+    <div class="callout ok">{{ icon('check') }}<div><h4>All three assurance layers are complete</h4><p>The report is ready to share or print.</p></div><a class="btn sm act" href="/p/{{ p.id }}/report">Open report</a></div>
+  {% else %}
+    <div class="callout warn">{{ icon('scale') }}<div><h4>Pair equivalent items</h4><p>No items are confirmed as like-for-like yet. Pair them on the Human Review tab, or upload another quote in {{ p.currency }}.</p></div><a class="btn sm act" href="/p/{{ p.id }}/review#matches">Human Review</a></div>
+  {% endif %}
+
+  {{ assurance(a, p) }}
+
+  <div class="grid g-main">
+    <div class="stack">
+      <div class="spread"><div><h2>Processing timeline</h2><p class="small muted" style="margin:2px 0 0">Every step is a real event: container ids, runtime, exit codes and durations come from Docker, model names and latency from the Vultr API.</p></div>
+        <span class="live" id="tl-live" hidden><span class="dot"></span>Live</span></div>
+      <div id="timeline" data-pid="{{ p.id }}"></div>
+      <div id="tl-empty" class="card"><div class="empty">{{ icon('clock') }}<h3>No activity yet</h3><p>Upload a quote and each step will appear here as it happens.</p></div></div>
+    </div>
+    <div class="stack">
+      {% if not docs %}
+      <div class="card"><h3 style="margin-bottom:12px">Upload a supplier quote</h3>{% include "_upload.html" %}</div>
+      {% endif %}
+      <div class="card flush">
+        <div class="card-head"><h3>{{ icon('file') }}Documents</h3><a class="small" href="/p/{{ p.id }}/documents">Manage</a></div>
+        <table class="compact" id="docs">
+          <tbody>
+          {% for d in docs %}
+          <tr><td><a href="/p/{{ p.id }}/doc/{{ d.id }}" class="strong">{{ d.supplier or d.original_name }}</a><div class="small muted">{{ d.original_name }}</div></td>
+              <td class="right">{{ status_chip(d.status) }}{% if d.comparable == 0 %}<div style="margin-top:4px"><span class="chip neutral">other currency</span></div>{% endif %}</td></tr>
+          {% else %}<tr><td class="muted small">No documents yet.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:6px">AI assistance</h3>
+        <p class="small muted">Both run as queued jobs. The AI only proposes; people confirm, and every number in a summary is checked against the verified figures.</p>
+        <div class="btn-row">
+          <form class="inline noprint" method="post" action="/p/{{ p.id }}/match"><input type="hidden" name="t" value="{{ token }}"><button class="secondary sm">{{ icon('refresh', 'sm') }}Re-run AI matching</button></form>
+          <form class="inline noprint" method="post" action="/p/{{ p.id }}/explain"><input type="hidden" name="t" value="{{ token }}"><button class="secondary sm">{{ icon('file-text', 'sm') }}Write AI summary</button></form>
+        </div>
+        {% if expl %}<p class="small muted" style="margin:10px 0 0">Latest summary: <b>{{ expl.status }}</b> — shown in the report{{ '' if expl.status == 'accepted' else ' only if every number checks out' }}.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
